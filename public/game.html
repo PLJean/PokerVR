@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>VR Poker Room</title>
+
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+
+        <script src="js/bundle.js"></script>
+
+    </head>
+    <body>
+
+        <a-scene>
+            <a-assets>
+                <a-asset-item id="poker-chair-obj" src="/assets/models/pokerchair.obj"></a-asset-item>
+                <a-asset-item id="poker-chair-mtl" src="/assets/materials/pokerchair.mtl"></a-asset-item>
+
+                <a-asset-item id="poker-table-obj" src="assets/models/pokertable.obj"></a-asset-item>
+                <a-asset-item id="poker-table-mtl" src="assets/materials/pokertable.mtl"></a-asset-item>
+
+                <img id="clubs" src="assets/images/clubs.png"></a-asset-item>
+                <img id="spades" src="assets/images/spades.png"></a-asset-item>
+                <img id="hearts" src="assets/images/hearts.png"></a-asset-item>
+                <img id="diamonds" src="assets/images/diamonds.png"></a-asset-item>
+
+            </a-assets>
+
+            <a-sky color="#00FFF0"></a-sky>
+
+            <a-entity id="light" light="type: ambient; color: #CCC; intensity: 5;"></a-entity>
+
+            <!--<a-entity id="chips-0" chips visible="false"></a-entity>-->
+
+            <!--<a-entity id="game-controls" position="0 0 -2"-->
+                      <!--button-panel="values: Fold, Call, Bet, 100;"></a-entity>-->
+
+            <a-entity position="5.045 2 7.721" rotation="0 33.5 0" geometry="primitive: plane; width: 4; height: 6" material="shader: html; target: #htmlElement;"></a-entity>
+
+            <a-entity id="table"  obj-model="obj: #poker-table-obj; mtl: #poker-table-mtl">
+                <a-entity id="card-spawns" dealer>
+                    <!--<a-entity dealt-cards></a-entity>-->
+                    <a-entity id="dealt-cards" position="0 0.175 0">
+                        <a-entity id="dealt-card-0" card="suit: clubs; symbol: 'A'"  position="-0.75 0 0" scale=".35 .35 1" rotation="0 0 0" visible="false"></a-entity>
+                        <a-entity id="dealt-card-1" card="suit: clubs; symbol: 'A'"  position="-.375 0 0" scale=".35 .35 1" rotation="0 0 0" visible="false"></a-entity>
+                        <a-entity id="dealt-card-2" card="suit: clubs; symbol: 'A'"  position="0 0 0"     scale=".35 .35 1" rotation="0 0 0" visible="false"></a-entity>
+                        <a-entity id="dealt-card-3" card="suit: clubs; symbol: 'A'"  position=".375 0 0"  scale=".35 .35 1" rotation="0 0 0" visible="false"></a-entity>
+                        <a-entity id="dealt-card-4" card="suit: clubs; symbol: 'A'"  position="0.75 0 0"  scale=".35 .35 1" rotation="0 0 0" visible="false"></a-entity>
+                    </a-entity>
+
+                    <a-entity id="card-spawn-0" position="0.012 0.145 2.185"     rotation="0 0 0" visible="false">
+                        <a-entity id="cards-0" position="-1.06 0 -0.15" rotation="0 35 0">
+                            <a-entity id="card-0-0" card="suit: clubs; symbol: 'A'"  position="-.185 0 0" scale=".35 .35 1" rotation="90 0 0"></a-entity>
+                            <a-entity id="card-0-1" card="suit: hearts; symbol: 'A'" position=".185 0 0" scale=".35 .35 1" rotation="90 0 0"></a-entity>
+                        </a-entity>
+
+                        <a-entity id="controls-0" position="-0.545 0.02 0.167" rotation="-90 0 0" scale="0.25 0.25 1" visible="false"
+                                  button-panel="values: Fold, Call, Bet, 100;
+                                                functions: fold(), call(), bet(parseInt(self.getValue(3))), "></a-entity>
+                        <a-entity id="chips-0" chips position="0 0 -0.6" visible="false"></a-entity>
+                    </a-entity>
+
+                    <a-entity id="card-spawn-1" position="2.464 0.145 0.861"    rotation="0 60 0" visible="false">
+                        <a-entity id="cards-1" position="-1.06 0 -0.15" rotation="0 35 0">
+                            <a-entity id="card-1-0" card="suit: clubs; symbol: 'A'"  position="-.185 0 0" scale=".35 .35 1" rotation="90 0 0"></a-entity>
+                            <a-entity id="card-1-1" card="suit: hearts; symbol: 'A'" position=".185 0 0" scale=".35 .35 1" rotation="90 0 0"></a-entity>
+                        </a-entity>
+
+                        <a-entity id="controls-1" position="-0.545 0.02 0.167" rotation="-90 0 0" scale="0.25 0.25 1" visible="false"
+                                  button-panel="values: Fold, Call, Bet, 100;
+                                                functions: fold(), call(), bet(parseInt(self.getValue(4))), "></a-entity>
+                        <a-entity id="chips-1" chips position="0 0 -0.6" visible="false"></a-entity>
+                    </a-entity>
+
+                    <a-entity id="card-spawn-2" position="2.621 0.145 -2.372"  rotation="0 120 0" visible="false">
+                        <a-entity id="cards-2" position="-1.06 0 -0.15" rotation="0 35 0">
+                            <a-entity id="card-2-0" card="suit: clubs; symbol: 'A'"  position="-.185 0 0" scale=".35 .35 1" rotation="90 0 0"></a-entity>
+                            <a-entity id="card-2-1" card="suit: hearts; symbol: 'A'" position=".185 0 0" scale=".35 .35 1" rotation="90 0 0"></a-entity>
+                        </a-entity>
+
+                        <a-entity id="controls-2" position="-0.545 0.02 0.167" rotation="-90 0 0" scale="0.25 0.25 1" visible="false"
+                                  button-panel="values: Fold, Call, Bet, 100;
+                                                functions: fold(), call(), bet(parseInt(self.getValue(4))), "></a-entity>
+                        <a-entity id="chips-2" chips position="0 0 -0.6" visible="false"></a-entity>
+                    </a-entity>
+
+                    <a-entity id="card-spawn-3" position="0 0.145 -3.929"      rotation="0 180 0" visible="false">
+                        <a-entity id="cards-3" position="-1.06 0 -0.15" rotation="0 35 0">
+                            <a-entity id="card-3-0" card="suit: clubs; symbol: 'A'"  position="-.185 0 0" scale=".35 .35 1" rotation="90 0 0"></a-entity>
+                            <a-entity id="card-3-1" card="suit: hearts; symbol: 'A'" position=".185 0 0" scale=".35 .35 1" rotation="90 0 0"></a-entity>
+                        </a-entity>
+
+                        <a-entity id="controls-3" position="-0.545 0.02 0.167" rotation="-90 0 0" scale="0.25 0.25 1" visible="false"
+                                  button-panel="values: Fold, Call, Bet, 100;
+                                                functions: fold(), call(), bet(parseInt(self.getValue(4))), "></a-entity>
+                        <a-entity id="chips-3" chips position="0 0 -0.6" visible="false"></a-entity>
+                    </a-entity>
+
+                    <a-entity id="card-spawn-4" position="-2.411 0.145 -2.710" rotation="0 240 0" visible="false">
+                        <a-entity id="cards-4" position="-1.06 0 -0.15" rotation="0 35 0">
+                            <a-entity id="card-4-0" card="suit: clubs; symbol: 'A'"  position="-.185 0 0" scale=".35 .35 1" rotation="90 0 0"></a-entity>
+                            <a-entity id="card-4-1" card="suit: hearts; symbol: 'A'" position=".185 0 0" scale=".35 .35 1" rotation="90 0 0"></a-entity>
+                        </a-entity>
+
+                        <a-entity id="controls-4" position="-0.545 0.02 0.167" rotation="-90 0 0" scale="0.25 0.25 1" visible="false"
+                                  button-panel="values: Fold, Call, Bet, 100;
+                                                functions: fold(), call(), bet(parseInt(self.getValue(4))), "></a-entity>
+                        <a-entity id="chips-4" chips position="0 0 -0.6" visible="false"></a-entity>
+                    </a-entity>
+
+                    <a-entity id="card-spawn-5" position="-2.749 0.145 0.230"   rotation="0 300 0" visible="false">
+                        <a-entity id="cards-5" position="-1.06 0 -0.15" rotation="0 35 0">
+                            <a-entity id="card-5-0" card="suit: clubs; symbol: 'A'"  position="-.185 0 0" scale=".35 .35 1" rotation="90 0 0"></a-entity>
+                            <a-entity id="card-5-1" card="suit: hearts; symbol: 'A'" position=".185 0 0" scale=".35 .35 1" rotation="90 0 0"></a-entity>
+                        </a-entity>
+
+                        <a-entity id="controls-5" position="-0.545 0.02 0.167" rotation="-90 0 0" scale="0.25 0.25 1" visible="false"
+                                  button-panel="values: Fold, Call, Bet, 100;
+                                                functions: fold(), call(), bet(parseInt(self.getValue(4))), "></a-entity>
+                        <a-entity id="chips-5" chips position="0 0 -0.6" visible="false"></a-entity>
+                    </a-entity>
+
+                </a-entity>
+            </a-entity>
+
+            <a-entity id="chairs">
+                <a-entity id="chair-0" seat="0" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="0 0 3.86"       rotation="0 0 0"  ></a-entity>
+                <a-entity id="chair-1" seat="1" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="4 0 1.836"      rotation="0 60 0" ></a-entity>
+                <a-entity id="chair-2" seat="2" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="4.035 0 -3.218" rotation="0 120 0"></a-entity>
+                <a-entity id="chair-3" seat="3" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="0 0 -5.07"      rotation="0 180 0"></a-entity>
+                <a-entity id="chair-4" seat="4" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="-4 0 -3.69"     rotation="0 240 0"></a-entity>
+                <a-entity id="chair-5" seat="5" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="-4.285 0 1.178" rotation="0 300 0"></a-entity>
+            </a-entity>
+
+            <a-camera id="player" wasd-controls-enabled="false" position="8 0 12" rotation="0 33.5 0">
+                <a-entity id="cursor" cursor raycaster="objects: .clickable" position="0 0 -1" geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.015" material="color: red;"></a-entity>
+            </a-camera>
+
+        </a-scene>
+
+        <div style="position: fixed; left: 0; top: 0; z-index: -1; overflow: hidden">
+            <div id="htmlElement" style="background: blue; color: #333; font-size: 48px">
+                <div style="border: 2px solid black; margin-left: 10%; margin-right: 10%;">
+                    PLAY
+                </div>
+                <div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+
