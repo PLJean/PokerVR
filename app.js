@@ -3,28 +3,31 @@ let app = express();
 let server = require('http').Server(app);
 let io = require('socket.io')(server);
 
-let pokerApp = require(__dirname + '/public/js/poker.js');
+// let pokerApp = require(__dirname + '/app/poker.js');
+let poker = new (require(__dirname + '/app/poker.js')).Poker;
+
 app.use(express.static('public/'));
+app.use('app/', express.static('/app/client.js'));
+// app.use('public/', express.static('/app/client.js'));
 
 app.get('/', function(req, res) {
     res.sendFile('game.html', {'root': __dirname + '/public'});
 });
 
-let poker = new pokerApp.Poker;
 // let handRank = new pokerApp.HandRank;
 
 io.on('connection', function(socket) {
-    console.log('Player ' +socket.id + ' entered the room.');
+    console.log('Player ' + socket.id + ' entered the room.');
 
     socket.on('disconnect', function() {
         console.log('Player ' + socket.id + ' has left the room.');
         poker.removePlayer(poker.getPlayerByData('socketid', socket.id));
     });
 
-    socket.on('join', function(joinData, seat) {
+    socket.on('join', function(joinData) {
         console.log("Player attempting to join...");
         // TODO Check database to see if player has money.
-        let availableSeat = poker.getSeat(seat);
+        let availableSeat = poker.getSeat();
 
         if (availableSeat > -1) {
             let data = {
@@ -110,7 +113,7 @@ function sendHand(player) {
 }
 
 function sendGameStates(player) {
-    let state = poker.getTableState();
+    let state = poker.getState();
     // console.log(poker.stateChanged);
     for (let i = 0; i < poker.players.length; i++) {
         let player = poker.players[i];

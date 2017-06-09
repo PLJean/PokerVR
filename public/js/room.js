@@ -1,7 +1,7 @@
 var AFRAME = require('aframe');
 var html = require('aframe-html-shader');
-var gui = require('./gui.js');
-var client = require('./client.js');
+// var gui = require('./gui.js');
+var client = require('../../app/client.js');
 
 
 function stringToVector(string) {
@@ -13,9 +13,10 @@ window.onload = function () {
     var player = document.querySelector('#player');
     var table = document.querySelector('#table');
 
-    var bet  = client.bet;
-    var call = client.call;
-    var fold = client.fold;
+    var poker = new client.PokerClient();
+    var bet  = poker.bet;
+    var call = poker.call;
+    var fold = poker.fold;
 
     var quaternion = new THREE.Quaternion();
     var rotateVector = new THREE.Vector3(0, 0, 1);
@@ -155,13 +156,13 @@ window.onload = function () {
             // console.log("init");
         },
         tick: function() {
-            var seat = client.getSeat();
-            var hand = client.getHand();
-            var players = client.getPlayers();
-            var state = client.getState();
+            var seat = poker.getSeat();
+            var hand = poker.getHand();
+            var players = poker.getPlayers();
+            var state = poker.getState();
 
             if (seat != null) {
-                console.log("Seat is " + seat);
+                console.log("Sitting down in seat #" + seat);
                 this.data.seat = seat;
 
                 let chair = document.querySelector('#chair-' + seat.toString()).components.seat;
@@ -169,7 +170,7 @@ window.onload = function () {
             }
 
             if (hand != null) {
-                // console.log(hand);
+                console.log(hand);
                 this.card0 = document.querySelector('#card-' + this.data.seat.toString() + '-0').components.card;
                 this.card1 = document.querySelector('#card-' + this.data.seat.toString() + '-1').components.card;
 
@@ -181,27 +182,34 @@ window.onload = function () {
             }
 
             if (players != null) {
-                // console.log(players);
+                console.log(players);
                 for (let playerSeat in players) {
                     // console.log(playerSeat);
                     let cardSpawn = document.querySelector('#card-spawn-' + playerSeat.toString());
+                    let playerChips = document.querySelector('#chips-' + playerSeat.toString());
+                    console.log(playerChips);
                     if (cardSpawn != null) {
                         cardSpawn.setAttribute('visible', true);
+                        playerChips.setAttribute('visible', true);
                     }
+                    playerChips = document.querySelector('#chips-' + playerSeat.toString());
+                    console.log(playerChips);
+
                 }
             }
 
             if (state != null) {
                 console.log(state);
-                let currentLength = this.dealt.length;
+                let dealtLength = this.dealt.length;
                 let chips = document.querySelector('#chips-' + this.data.seat.toString());
-                // console.log(this.data.seat);
-                let stateKeys = Object.keys(state);
-                // console.log(chips.components);
+                // let playerData = state
                 chips.components['chips'].setAmount(state.players[this.data.seat].cash);
-                if (state.dealt.length > currentLength) {
+
+                console.log(state.dealt);
+                console.log(state['dealt']);
+                if (state.dealt.length > dealtLength) {
                     this.dealt = state.dealt;
-                    if (currentLength == 0) {
+                    if (dealtLength == 0) {
                         let dealtElem0 = document.querySelector('#dealt-card-0');
                         let dealtElem1 = document.querySelector('#dealt-card-1');
                         let dealtElem2 = document.querySelector('#dealt-card-2');
@@ -220,7 +228,7 @@ window.onload = function () {
                         console.log("Flop");
                     }
 
-                    else if (currentLength == 3) {
+                    else if (dealtLength == 3) {
                         let dealtElem3 = document.querySelector('#dealt-card-3');
                         let dealt3 = dealtElem3.components.card;
 
@@ -231,7 +239,7 @@ window.onload = function () {
 
                     }
 
-                    else if (currentLength == 4) {
+                    else if (dealtLength == 4) {
                         let dealtElem4 = document.querySelector('#dealt-card-4');
                         let dealt4 = dealtElem4.components.card;
 
@@ -250,20 +258,20 @@ window.onload = function () {
                     let dealtElem2 = document.querySelector('#dealt-card-2');
                     let dealtElem3 = document.querySelector('#dealt-card-3');
                     let dealtElem4 = document.querySelector('#dealt-card-4');
-                    console.log(dealtElem0);
+                    // console.log(dealtElem0);
                     dealtElem0.setAttribute('visible', false);
                     dealtElem1.setAttribute('visible', false);
                     dealtElem2.setAttribute('visible', false);
                     dealtElem3.setAttribute('visible', false);
                     dealtElem4.setAttribute('visible', false);
-                    console.log(dealtElem0);
+                    // console.log(dealtElem0);
                 }
             }
         },
         update: function() {
             // console.log("in update");
             if (this.data.seat !=  null) {
-                // client.join(100, this.data.seat);
+                poker.join(100, this.data.seat);
             }
         },
         reset: function() {

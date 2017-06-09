@@ -1,4 +1,217 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+// var socket = require('socket.io-client')();
+const socketio = require("socket.io-client");
+// var hand = null;
+// var seat = null;
+// var players = null;
+// var state = null;
+class Client {
+    constructor() {
+        let client = this;
+        this.socket = socketio();
+        this.socket.on('gameState', function (data) {
+            // console.log("gameState");
+            // players = data['state']['players'];
+            client.setState(data['state']);
+            // console.log(data);
+            // console.log(data['state']['players']['1']);
+        });
+    }
+    setState(state) {
+        this.state = state;
+    }
+}
+exports.Client = Client;
+class PokerClient extends Client {
+    constructor() {
+        super();
+        this.hand = null;
+        this.seat = null;
+        this.players = null;
+        let client = this;
+        this.socket.on('join failed', function (data) {
+            console.log(data.message);
+        });
+        this.socket.on('hand', function (data) {
+            client.setHand(data['hand']);
+            // console.log(hand);
+        });
+        this.socket.on('beSeated', function (data) {
+            client.setSeat(data['seatNumber']);
+        });
+    }
+    setHand(hand) {
+        this.hand = hand;
+    }
+    setSeat(seat) {
+        this.seat = seat;
+    }
+    join(amount) {
+        console.log("Joining table.");
+        this.socket.emit('join', { money: amount });
+    }
+    leave() {
+        console.log("Leaving table.");
+        this.socket.emit('leave');
+    }
+    bet(amount) {
+        console.log("Bet " + amount);
+        this.socket.emit('bet', { money: amount });
+    }
+    fold() {
+        console.log("Fold");
+        this.socket.emit('fold');
+    }
+    call() {
+        console.log("Call");
+        this.socket.emit('call');
+    }
+    getHand() {
+        if (this.hand == null)
+            return null;
+        else {
+            var newHand = this.hand;
+            this.hand = null;
+            return newHand;
+        }
+    }
+    getSeat() {
+        if (this.seat == null)
+            return null;
+        else {
+            var newSeat = this.seat;
+            this.seat = null;
+            return newSeat;
+        }
+    }
+    getPlayers() {
+        if (this.players == null)
+            return null;
+        else {
+            var newPlayers = this.players;
+            this.players = null;
+            return newPlayers;
+        }
+    }
+    getState() {
+        if (this.state == null)
+            return null;
+        else {
+            var newState = this.state;
+            this.players = this.state['players'];
+            this.state = null;
+            return newState;
+        }
+    }
+}
+exports.PokerClient = PokerClient;
+// socket.on('join failed', function(data) {
+//     console.log(data.message);
+// });
+//
+// socket.on('hand', function(data) {
+//     hand = data['hand'];
+//     // console.log(hand);
+// });
+//
+// socket.on('beSeated', function(data) {
+//     seat = data['seatNumber'];
+// });
+//
+// socket.on('gameState', function(data, action) {
+//     // console.log("gameState");
+//     players = data['state']['players'];
+//     state = data['state'];
+//     // console.log(data);
+//     // console.log(data['state']['players']['1']);
+// });
+//
+// function join(amount, seat) {
+//     console.log("Joining table.");
+//     socket.emit('join', {money: amount, seatNumber: seat});
+// }
+//
+// function leave() {
+//     console.log("Leaving table.");
+//     socket.emit('leave');
+// }
+//
+// function handleMoney(amount, minimum) {
+//     console.log("Putting in " + amount + " with a minimum of " + minimum);
+//     socket.emit('handleMoney', {money: amount, minimum: minimum});
+// }
+//
+// function bet(amount) {
+//     console.log("Bet " + amount);
+//     socket.emit('bet', {money: amount});
+// }
+//
+// function fold() {
+//     console.log("Fold");
+//     socket.emit('fold');
+// }
+//
+// function call() {
+//     console.log("Call");
+//     socket.emit('call');
+// }
+//
+// function getHand() {
+//     if (hand == null) return null;
+//
+//     else {
+//         var newHand = hand;
+//         hand = null;
+//         return newHand;
+//     }
+// }
+//
+// function getSeat() {
+//     if (seat == null) return null;
+//
+//     else {
+//         var newSeat = seat;
+//         seat = null;
+//         return newSeat;
+//     }
+// }
+//
+// function getPlayers() {
+//     if (players == null) return null;
+//
+//     else {
+//         var newPlayers = players;
+//         players = null;
+//         return newPlayers;
+//     }
+// }
+//
+// function getState() {
+//     if (state == null) return null;
+//
+//     else {
+//         var newState = state;
+//         state = null;
+//         return newState;
+//     }
+// }
+//
+//
+// module.exports = {
+//     join,
+//     leave,
+//     bet,
+//     call,
+//     fold,
+//     getState,
+//     getHand,
+//     getSeat,
+//     getPlayers
+// }; 
+
+},{"socket.io-client":41}],2:[function(require,module,exports){
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -4180,7 +4393,7 @@
 
 /***/ })
 /******/ ]);
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 (function (global){
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.AFRAME = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var str = Object.prototype.toString
@@ -83643,7 +83856,7 @@ module.exports = getWakeLock();
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 module.exports = after
 
 function after(count, callback, err_cb) {
@@ -83673,7 +83886,7 @@ function after(count, callback, err_cb) {
 
 function noop() {}
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 /**
  * An abstraction for slicing an arraybuffer even when
  * ArrayBuffer.prototype.slice is not supported
@@ -83704,7 +83917,7 @@ module.exports = function(arraybuffer, start, end) {
   return result.buffer;
 };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 
 /**
  * Expose `Backoff`.
@@ -83791,7 +84004,7 @@ Backoff.prototype.setJitter = function(jitter){
 };
 
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /*
  * base64-arraybuffer
  * https://github.com/niklasvh/base64-arraybuffer
@@ -83860,7 +84073,7 @@ Backoff.prototype.setJitter = function(jitter){
   };
 })();
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 (function (global){
 /**
  * Create a blob builder even when vendor prefixes exist
@@ -83960,9 +84173,9 @@ module.exports = (function() {
 })();
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],8:[function(require,module,exports){
-
 },{}],9:[function(require,module,exports){
+
+},{}],10:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -84144,7 +84357,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /**
  * Slice reference.
  */
@@ -84169,7 +84382,7 @@ module.exports = function(obj, fn){
   }
 };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -84335,7 +84548,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 
 module.exports = function(a, b){
   var fn = function(){};
@@ -84343,7 +84556,7 @@ module.exports = function(a, b){
   a.prototype = new fn;
   a.prototype.constructor = a;
 };
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 
 /**
  * This is the web browser implementation of `debug()`.
@@ -84513,7 +84726,7 @@ function localstorage(){
   } catch (e) {}
 }
 
-},{"./debug":14}],14:[function(require,module,exports){
+},{"./debug":15}],15:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -84712,11 +84925,11 @@ function coerce(val) {
   return val;
 }
 
-},{"ms":36}],15:[function(require,module,exports){
+},{"ms":37}],16:[function(require,module,exports){
 
 module.exports = require('./lib/index');
 
-},{"./lib/index":16}],16:[function(require,module,exports){
+},{"./lib/index":17}],17:[function(require,module,exports){
 
 module.exports = require('./socket');
 
@@ -84728,7 +84941,7 @@ module.exports = require('./socket');
  */
 module.exports.parser = require('engine.io-parser');
 
-},{"./socket":17,"engine.io-parser":29}],17:[function(require,module,exports){
+},{"./socket":18,"engine.io-parser":30}],18:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -85470,7 +85683,7 @@ Socket.prototype.filterUpgrades = function (upgrades) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./transport":18,"./transports/index":19,"component-emitter":25,"debug":26,"engine.io-parser":29,"indexof":33,"parsejson":37,"parseqs":38,"parseuri":39}],18:[function(require,module,exports){
+},{"./transport":19,"./transports/index":20,"component-emitter":26,"debug":27,"engine.io-parser":30,"indexof":34,"parsejson":38,"parseqs":39,"parseuri":40}],19:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -85629,7 +85842,7 @@ Transport.prototype.onClose = function () {
   this.emit('close');
 };
 
-},{"component-emitter":25,"engine.io-parser":29}],19:[function(require,module,exports){
+},{"component-emitter":26,"engine.io-parser":30}],20:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies
@@ -85686,7 +85899,7 @@ function polling (opts) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling-jsonp":20,"./polling-xhr":21,"./websocket":23,"xmlhttprequest-ssl":24}],20:[function(require,module,exports){
+},{"./polling-jsonp":21,"./polling-xhr":22,"./websocket":24,"xmlhttprequest-ssl":25}],21:[function(require,module,exports){
 (function (global){
 
 /**
@@ -85921,7 +86134,7 @@ JSONPPolling.prototype.doWrite = function (data, fn) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":22,"component-inherit":12}],21:[function(require,module,exports){
+},{"./polling":23,"component-inherit":13}],22:[function(require,module,exports){
 (function (global){
 /**
  * Module requirements.
@@ -86349,7 +86562,7 @@ function unloadHandler () {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":22,"component-emitter":25,"component-inherit":12,"debug":26,"xmlhttprequest-ssl":24}],22:[function(require,module,exports){
+},{"./polling":23,"component-emitter":26,"component-inherit":13,"debug":27,"xmlhttprequest-ssl":25}],23:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -86596,7 +86809,7 @@ Polling.prototype.uri = function () {
   return schema + '://' + (ipv6 ? '[' + this.hostname + ']' : this.hostname) + port + this.path + query;
 };
 
-},{"../transport":18,"component-inherit":12,"debug":26,"engine.io-parser":29,"parseqs":38,"xmlhttprequest-ssl":24,"yeast":54}],23:[function(require,module,exports){
+},{"../transport":19,"component-inherit":13,"debug":27,"engine.io-parser":30,"parseqs":39,"xmlhttprequest-ssl":25,"yeast":55}],24:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -86885,7 +87098,7 @@ WS.prototype.check = function () {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../transport":18,"component-inherit":12,"debug":26,"engine.io-parser":29,"parseqs":38,"ws":8,"yeast":54}],24:[function(require,module,exports){
+},{"../transport":19,"component-inherit":13,"debug":27,"engine.io-parser":30,"parseqs":39,"ws":9,"yeast":55}],25:[function(require,module,exports){
 (function (global){
 // browser shim for xmlhttprequest module
 
@@ -86926,7 +87139,7 @@ module.exports = function (opts) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"has-cors":32}],25:[function(require,module,exports){
+},{"has-cors":33}],26:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -87091,7 +87304,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 (function (process){
 
 /**
@@ -87272,7 +87485,7 @@ function localstorage(){
 }
 
 }).call(this,require('_process'))
-},{"./debug":27,"_process":9}],27:[function(require,module,exports){
+},{"./debug":28,"_process":10}],28:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -87474,7 +87687,7 @@ function coerce(val) {
   return val;
 }
 
-},{"ms":28}],28:[function(require,module,exports){
+},{"ms":29}],29:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -87625,7 +87838,7 @@ function plural(ms, n, name) {
   return Math.ceil(ms / n) + ' ' + name + 's'
 }
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -88238,7 +88451,7 @@ exports.decodePayloadAsBinary = function (data, binaryType, callback) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./keys":30,"after":3,"arraybuffer.slice":4,"base64-arraybuffer":6,"blob":7,"has-binary":31,"wtf-8":53}],30:[function(require,module,exports){
+},{"./keys":31,"after":4,"arraybuffer.slice":5,"base64-arraybuffer":7,"blob":8,"has-binary":32,"wtf-8":54}],31:[function(require,module,exports){
 
 /**
  * Gets the keys for an object.
@@ -88259,7 +88472,7 @@ module.exports = Object.keys || function keys (obj){
   return arr;
 };
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 (function (global){
 
 /*
@@ -88322,7 +88535,7 @@ function hasBinary(data) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"isarray":34}],32:[function(require,module,exports){
+},{"isarray":35}],33:[function(require,module,exports){
 
 /**
  * Module exports.
@@ -88341,7 +88554,7 @@ try {
   module.exports = false;
 }
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -88352,12 +88565,12 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 (function (global){
 /*! JSON v3.3.2 | http://bestiejs.github.io/json3 | Copyright 2012-2014, Kit Cambridge | http://kit.mit-license.org */
 ;(function () {
@@ -89263,7 +89476,7 @@ module.exports = Array.isArray || function (arr) {
 }).call(this);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -89390,7 +89603,7 @@ function plural(ms, n, name) {
   return Math.ceil(ms / n) + ' ' + name + 's';
 }
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 (function (global){
 /**
  * JSON parse.
@@ -89425,7 +89638,7 @@ module.exports = function parsejson(data) {
   }
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 /**
  * Compiles a querystring
  * Returns string representation of the object
@@ -89464,7 +89677,7 @@ exports.decode = function(qs){
   return qry;
 };
 
-},{}],39:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 /**
  * Parses an URI
  *
@@ -89505,7 +89718,7 @@ module.exports = function parseuri(str) {
     return uri;
 };
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -89616,7 +89829,7 @@ exports.connect = lookup;
 exports.Manager = require('./manager');
 exports.Socket = require('./socket');
 
-},{"./manager":41,"./socket":43,"./url":44,"debug":46,"socket.io-parser":50}],41:[function(require,module,exports){
+},{"./manager":42,"./socket":44,"./url":45,"debug":47,"socket.io-parser":51}],42:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -90178,7 +90391,7 @@ Manager.prototype.onreconnect = function () {
   this.emitAll('reconnect', attempt);
 };
 
-},{"./on":42,"./socket":43,"backo2":5,"component-bind":10,"component-emitter":45,"debug":46,"engine.io-client":15,"indexof":33,"socket.io-parser":50}],42:[function(require,module,exports){
+},{"./on":43,"./socket":44,"backo2":6,"component-bind":11,"component-emitter":46,"debug":47,"engine.io-client":16,"indexof":34,"socket.io-parser":51}],43:[function(require,module,exports){
 
 /**
  * Module exports.
@@ -90204,7 +90417,7 @@ function on (obj, ev, fn) {
   };
 }
 
-},{}],43:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -90625,7 +90838,7 @@ Socket.prototype.compress = function (compress) {
   return this;
 };
 
-},{"./on":42,"component-bind":10,"component-emitter":45,"debug":46,"has-binary":31,"socket.io-parser":50,"to-array":52}],44:[function(require,module,exports){
+},{"./on":43,"component-bind":11,"component-emitter":46,"debug":47,"has-binary":32,"socket.io-parser":51,"to-array":53}],45:[function(require,module,exports){
 (function (global){
 
 /**
@@ -90704,15 +90917,15 @@ function url (uri, loc) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"debug":46,"parseuri":39}],45:[function(require,module,exports){
-arguments[4][25][0].apply(exports,arguments)
-},{"dup":25}],46:[function(require,module,exports){
+},{"debug":47,"parseuri":40}],46:[function(require,module,exports){
 arguments[4][26][0].apply(exports,arguments)
-},{"./debug":47,"_process":9,"dup":26}],47:[function(require,module,exports){
+},{"dup":26}],47:[function(require,module,exports){
 arguments[4][27][0].apply(exports,arguments)
-},{"dup":27,"ms":48}],48:[function(require,module,exports){
+},{"./debug":48,"_process":10,"dup":27}],48:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],49:[function(require,module,exports){
+},{"dup":28,"ms":49}],49:[function(require,module,exports){
+arguments[4][29][0].apply(exports,arguments)
+},{"dup":29}],50:[function(require,module,exports){
 (function (global){
 /*global Blob,File*/
 
@@ -90857,7 +91070,7 @@ exports.removeBlobs = function(data, callback) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./is-buffer":51,"isarray":34}],50:[function(require,module,exports){
+},{"./is-buffer":52,"isarray":35}],51:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -91263,7 +91476,7 @@ function error(data){
   };
 }
 
-},{"./binary":49,"./is-buffer":51,"component-emitter":11,"debug":13,"json3":35}],51:[function(require,module,exports){
+},{"./binary":50,"./is-buffer":52,"component-emitter":12,"debug":14,"json3":36}],52:[function(require,module,exports){
 (function (global){
 
 module.exports = isBuf;
@@ -91280,7 +91493,7 @@ function isBuf(obj) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],52:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 module.exports = toArray
 
 function toArray(list, index) {
@@ -91295,7 +91508,7 @@ function toArray(list, index) {
     return array
 }
 
-},{}],53:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/wtf8 v1.0.0 by @mathias */
 ;(function(root) {
@@ -91533,7 +91746,7 @@ function toArray(list, index) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],54:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 'use strict';
 
 var alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'.split('')
@@ -91603,127 +91816,15 @@ yeast.encode = encode;
 yeast.decode = decode;
 module.exports = yeast;
 
-},{}],55:[function(require,module,exports){
-var socket = require('socket.io-client')();
-var hand = null;
-var seat = null;
-var players = null;
-var state = null;
-
-socket.on('join failed', function(data) {
-    console.log(data.message);
-});
-
-socket.on('hand', function(data) {
-    hand = data['hand'];
-    // console.log(hand);
-});
-
-socket.on('beSeated', function(data) {
-    seat = data['seatNumber'];
-});
-
-socket.on('gameState', function(data, action) {
-    // console.log("gameState");
-    players = data['state']['players'];
-    state = data['state'];
-    // console.log(data);
-    // console.log(data['state']['players']['1']);
-});
-
-function join(amount, seat) {
-    console.log("Joining table.");
-    socket.emit('join', {money: amount, seatNumber: seat});
-}
-
-function leave() {
-    console.log("Leaving table.");
-    socket.emit('leave');
-}
-
-function handleMoney(amount, minimum) {
-    console.log("Putting in " + amount + " with a minimum of " + minimum);
-    socket.emit('handleMoney', {money: amount, minimum: minimum});
-}
-
-function bet(amount) {
-    console.log("Bet " + amount);
-    socket.emit('bet', {money: amount});
-}
-
-function fold() {
-    console.log("Fold");
-    socket.emit('fold');
-}
-
-function call() {
-    console.log("Call");
-    socket.emit('call');
-}
-
-function getHand() {
-    if (hand == null) return null;
-
-    else {
-        var newHand = hand;
-        hand = null;
-        return newHand;
-    }
-}
-
-function getSeat() {
-    if (seat == null) return null;
-
-    else {
-        var newSeat = seat;
-        seat = null;
-        return newSeat;
-    }
-}
-
-function getPlayers() {
-    if (players == null) return null;
-
-    else {
-        var newPlayers = players;
-        players = null;
-        return newPlayers;
-    }
-}
-
-function getState() {
-    if (state == null) return null;
-
-    else {
-        var newState = state;
-        state = null;
-        return newState;
-    }
-}
-
-
-module.exports = {
-    join,
-    leave,
-    bet,
-    call,
-    fold,
-    getState,
-    getHand,
-    getSeat,
-    getPlayers
-};
-},{"socket.io-client":40}],56:[function(require,module,exports){
-arguments[4][8][0].apply(exports,arguments)
-},{"dup":8}],57:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 require('./room.js');
 
 
-},{"./room.js":58}],58:[function(require,module,exports){
+},{"./room.js":57}],57:[function(require,module,exports){
 var AFRAME = require('aframe');
 var html = require('aframe-html-shader');
-var gui = require('./gui.js');
-var client = require('./client.js');
+// var gui = require('./gui.js');
+var client = require('../../app/client.js');
 
 
 function stringToVector(string) {
@@ -91735,9 +91836,10 @@ window.onload = function () {
     var player = document.querySelector('#player');
     var table = document.querySelector('#table');
 
-    var bet  = client.bet;
-    var call = client.call;
-    var fold = client.fold;
+    var poker = new client.PokerClient();
+    var bet  = poker.bet;
+    var call = poker.call;
+    var fold = poker.fold;
 
     var quaternion = new THREE.Quaternion();
     var rotateVector = new THREE.Vector3(0, 0, 1);
@@ -91877,13 +91979,13 @@ window.onload = function () {
             // console.log("init");
         },
         tick: function() {
-            var seat = client.getSeat();
-            var hand = client.getHand();
-            var players = client.getPlayers();
-            var state = client.getState();
+            var seat = poker.getSeat();
+            var hand = poker.getHand();
+            var players = poker.getPlayers();
+            var state = poker.getState();
 
             if (seat != null) {
-                console.log("Seat is " + seat);
+                console.log("Sitting down in seat #" + seat);
                 this.data.seat = seat;
 
                 let chair = document.querySelector('#chair-' + seat.toString()).components.seat;
@@ -91891,7 +91993,7 @@ window.onload = function () {
             }
 
             if (hand != null) {
-                // console.log(hand);
+                console.log(hand);
                 this.card0 = document.querySelector('#card-' + this.data.seat.toString() + '-0').components.card;
                 this.card1 = document.querySelector('#card-' + this.data.seat.toString() + '-1').components.card;
 
@@ -91903,27 +92005,34 @@ window.onload = function () {
             }
 
             if (players != null) {
-                // console.log(players);
+                console.log(players);
                 for (let playerSeat in players) {
                     // console.log(playerSeat);
                     let cardSpawn = document.querySelector('#card-spawn-' + playerSeat.toString());
+                    let playerChips = document.querySelector('#chips-' + playerSeat.toString());
+                    console.log(playerChips);
                     if (cardSpawn != null) {
                         cardSpawn.setAttribute('visible', true);
+                        playerChips.setAttribute('visible', true);
                     }
+                    playerChips = document.querySelector('#chips-' + playerSeat.toString());
+                    console.log(playerChips);
+
                 }
             }
 
             if (state != null) {
                 console.log(state);
-                let currentLength = this.dealt.length;
+                let dealtLength = this.dealt.length;
                 let chips = document.querySelector('#chips-' + this.data.seat.toString());
-                // console.log(this.data.seat);
-                let stateKeys = Object.keys(state);
-                // console.log(chips.components);
+                // let playerData = state
                 chips.components['chips'].setAmount(state.players[this.data.seat].cash);
-                if (state.dealt.length > currentLength) {
+
+                console.log(state.dealt);
+                console.log(state['dealt']);
+                if (state.dealt.length > dealtLength) {
                     this.dealt = state.dealt;
-                    if (currentLength == 0) {
+                    if (dealtLength == 0) {
                         let dealtElem0 = document.querySelector('#dealt-card-0');
                         let dealtElem1 = document.querySelector('#dealt-card-1');
                         let dealtElem2 = document.querySelector('#dealt-card-2');
@@ -91942,7 +92051,7 @@ window.onload = function () {
                         console.log("Flop");
                     }
 
-                    else if (currentLength == 3) {
+                    else if (dealtLength == 3) {
                         let dealtElem3 = document.querySelector('#dealt-card-3');
                         let dealt3 = dealtElem3.components.card;
 
@@ -91953,7 +92062,7 @@ window.onload = function () {
 
                     }
 
-                    else if (currentLength == 4) {
+                    else if (dealtLength == 4) {
                         let dealtElem4 = document.querySelector('#dealt-card-4');
                         let dealt4 = dealtElem4.components.card;
 
@@ -91972,20 +92081,20 @@ window.onload = function () {
                     let dealtElem2 = document.querySelector('#dealt-card-2');
                     let dealtElem3 = document.querySelector('#dealt-card-3');
                     let dealtElem4 = document.querySelector('#dealt-card-4');
-                    console.log(dealtElem0);
+                    // console.log(dealtElem0);
                     dealtElem0.setAttribute('visible', false);
                     dealtElem1.setAttribute('visible', false);
                     dealtElem2.setAttribute('visible', false);
                     dealtElem3.setAttribute('visible', false);
                     dealtElem4.setAttribute('visible', false);
-                    console.log(dealtElem0);
+                    // console.log(dealtElem0);
                 }
             }
         },
         update: function() {
             // console.log("in update");
             if (this.data.seat !=  null) {
-                // client.join(100, this.data.seat);
+                poker.join(100, this.data.seat);
             }
         },
         reset: function() {
@@ -92533,4 +92642,4 @@ window.onload = function () {
 
 
 
-},{"./client.js":55,"./gui.js":56,"aframe":2,"aframe-html-shader":1}]},{},[57]);
+},{"../../app/client.js":1,"aframe":3,"aframe-html-shader":2}]},{},[56]);
