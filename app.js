@@ -19,10 +19,10 @@ function quit() {
 let express = require('express');
 let app = express();
 let server = require('http').Server(app);
-let gameServer = new (require(__dirname + '/app/poker.js')).GameServer(server);
+let gameServer = new (require(__dirname + '/app/server/server.js')).GameServer(server);
 
 app.use(express.static('public/'));
-app.use('app/', express.static('/app/client.js'));
+app.use('app/', express.static('/app/clients/client.js'));
 
 app.get('/', function(req, res) {
     res.sendFile('game.html', {'root': __dirname + '/public'});

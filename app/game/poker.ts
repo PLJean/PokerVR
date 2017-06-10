@@ -1,6 +1,6 @@
-import * as socketIo from "socket.io";
-
-const cardSymbolMap = {'AS': 'Ace of Spades', '2S': '2 of Spades', '3S': '3 of Spades', '4S': '4 of Spades', '5S': '5 of Spades', '6S': '6 of Spades', '7S': '7 of Spades', '8S': '8 of Spades', '9S': '9 of Spades', '0S': '10 of Spades', 'JS': 'Jack of Spades', 'QS': 'Queen of Spades', 'KS': 'King of Spades', 'AD': 'Ace of Diamonds', '2D': '2 of Diamonds', '3D': '3 of Diamonds', '4D': '4 of Diamonds', '5D': '5 of Diamonds', '6D': '6 of Diamonds', '7D': '7 of Diamonds', '8D': '8 of Diamonds', '9D': '9 of Diamonds', '0D': '10 of Diamonds', 'JD': 'Jack of Diamonds', 'QD': 'Queen of Diamonds', 'KD': 'King of Diamonds', 'AC': 'Ace of Clubs', '2C': '2 of Clubs', '3C': '3 of Clubs', '4C': '4 of Clubs', '5C': '5 of Clubs', '6C': '6 of Clubs', '7C': '7 of Clubs', '8C': '8 of Clubs', '9C': '9 of Clubs', '0C': '10 of Clubs', 'JC': 'Jack of Clubs', 'QC': 'Queen of Clubs', 'KC': 'King of Clubs', 'AH': 'Ace of Hearts', '2H': '2 of Hearts', '3H': '3 of Hearts', '4H': '4 of Hearts', '5H': '5 of Hearts', '6H': '6 of Hearts', '7H': '7 of Hearts', '8H': '8 of Hearts', '9H': '9 of Hearts', '0H': '10 of Hearts', 'JH': 'Jack of Hearts', 'QH': 'Queen of Hearts', 'KH': 'King of Hearts'};
+import { Cards, Deck } from "./cards";
+import {Game, Player} from "./game";
+// const cardSymbolMap = {'AS': 'Ace of Spades', '2S': '2 of Spades', '3S': '3 of Spades', '4S': '4 of Spades', '5S': '5 of Spades', '6S': '6 of Spades', '7S': '7 of Spades', '8S': '8 of Spades', '9S': '9 of Spades', '0S': '10 of Spades', 'JS': 'Jack of Spades', 'QS': 'Queen of Spades', 'KS': 'King of Spades', 'AD': 'Ace of Diamonds', '2D': '2 of Diamonds', '3D': '3 of Diamonds', '4D': '4 of Diamonds', '5D': '5 of Diamonds', '6D': '6 of Diamonds', '7D': '7 of Diamonds', '8D': '8 of Diamonds', '9D': '9 of Diamonds', '0D': '10 of Diamonds', 'JD': 'Jack of Diamonds', 'QD': 'Queen of Diamonds', 'KD': 'King of Diamonds', 'AC': 'Ace of Clubs', '2C': '2 of Clubs', '3C': '3 of Clubs', '4C': '4 of Clubs', '5C': '5 of Clubs', '6C': '6 of Clubs', '7C': '7 of Clubs', '8C': '8 of Clubs', '9C': '9 of Clubs', '0C': '10 of Clubs', 'JC': 'Jack of Clubs', 'QC': 'Queen of Clubs', 'KC': 'King of Clubs', 'AH': 'Ace of Hearts', '2H': '2 of Hearts', '3H': '3 of Hearts', '4H': '4 of Hearts', '5H': '5 of Hearts', '6H': '6 of Hearts', '7H': '7 of Hearts', '8H': '8 of Hearts', '9H': '9 of Hearts', '0H': '10 of Hearts', 'JH': 'Jack of Hearts', 'QH': 'Queen of Hearts', 'KH': 'King of Hearts'};
 
 function subsets(array, k) {
     let subsetsList = [];
@@ -32,72 +32,6 @@ function sum(array: number[]) {
     return array.reduce(function (sum, num) {
         return sum + num;
     });
-}
-
-class Cards {
-    cardList: string[];
-
-    constructor(cardList: string[] = []) {
-        this.cardList = cardList;
-    }
-
-    at(index: number): string {
-        return this.cardList[index];
-    }
-
-    toString(): string {
-        var ret = '';
-        for (let i = 0; i < this.cardList.length; i++) {
-            ret += this.cardList[i].toString();
-            if (i != this.cardList.length - 1) {
-                ret += ', ';
-            }
-        }
-
-        return ret;
-    }
-
-    length(): number {
-        return this.cardList.length;
-    }
-
-    empty(): boolean{
-        return this.cardList.length == 0;
-    }
-
-    clear(): void {
-        this.cardList = [];
-    }
-
-    shuffle(): void {
-        var j, x;
-        for (let i = this.cardList.length; i; i--) {
-            j = Math.floor(Math.random() * i);
-            x = this.cardList[i - 1];
-            this.cardList[i - 1] = this.cardList[j];
-            this.cardList[j] = x;
-        }
-    }
-
-    pop(): string {
-        return this.cardList.pop();
-    }
-
-    add(card: string): void {
-        if (card in cardSymbolMap) {
-            this.cardList.push(card);
-        }
-    }
-
-    addCards(cards: Cards): void {
-        for (let card of cards.cardList) {
-            this.add(card);
-        }
-    }
-
-    getCardsArray(): string[] {
-        return this.cardList;
-    }
 }
 
 export class HandRank {
@@ -315,167 +249,156 @@ export class HandRank {
     }
 }
 
+// export class Player {
+//     cash: number = 0;
+//     hand: Cards = new Cards();
+//     betAmount: number = 0;
+//     folded: boolean = true;
+//     playerInfo = {
+//         'socketid': null
+//     };
+//
+//     private state = {
+//         turn: 0,
+//         action: [null, null],
+//         cash: 0,
+//     };
+//
+//     public stateHasChanged = true;
+//
+//     constructor(money) {
+//         this.cash = money;
+//     }
+//
+//     call() {
+//         this.state.action = [1, null];
+//         this.stateHasChanged = true;
+//     }
+//
+//     bet(amount) {
+//         this.betAmount += amount;
+//         this.state.action =  [2, amount];
+//         this.stateHasChanged = true;
+//     }
+//
+//     fold(): void {
+//         this.folded = true;
+//         this.state.action = [3, null];
+//         this.stateHasChanged = true;
+//     }
+//
+//     isDone(): boolean {
+//         if (this.state.action) {
+//             return true;
+//         }
+//
+//         return false;
+//     }
+//
+//     isFolded(): boolean {
+//         return this.folded;
+//     }
+//
+//     getHand() {
+//         return this.hand;
+//     }
+//
+//     reset(deck: Cards) {
+//         this.betAmount = 0;
+//         this.folded = false;
+//         this.state.action = null;
+//         this.hand.clear();
+//         if (deck != null) {
+//             deck.addCards(this.hand);
+//         }
+//         this.stateHasChanged = true;
+//     }
+//
+//     resetTurn() {
+//         this.betAmount = 0;
+//         this.folded = false;
+//         this.state.action = null;
+//         this.stateHasChanged = true;
+//     }
+//
+//     has(amount) {
+//         return amount >= 0 && amount < this.cash;
+//     }
+//
+//     get(key) {
+//         // console.log(this.betAmount);
+//         // console.log(this.playerInfo);
+//         if (this.playerInfo.hasOwnProperty(key)) {
+//             return this.playerInfo[key];
+//         }
+//
+//         return null;
+//     }
+//
+//     set(key, value) {
+//         this.playerInfo[key] = value;
+//     }
+//
+//     getState() {
+//         console.log(this.cash);
+//         this.state.cash = this.cash;
+//         console.log(this.state);
+//         this.stateHasChanged = false;
+//         return this.state;
+//     }
+//
+//     addMoney(money) {
+//         this.cash += money;
+//     }
+// }
 
-class Deck extends Cards {
-    constructor() {
-        super(Object.keys(cardSymbolMap));
-        this.shuffle();
-    }
-}
+// class Game {
+//     protected players: Player[] = [];
+//     protected state = {};
+//     protected stateChanged: boolean = false;
+//
+//     public getState() {
+//         for (let i = 0; i < this.players.length; i++) {
+//             if (this.players[i] != null && this.players[i].stateHasChanged) {
+//                 this.updateState('players.' + i, this.players[i].getState());
+//             }
+//         }
+//
+//         this.stateChanged = false;
+//
+//         return this.state;
+//     }
+//
+//     public hasNewState() {
+//         return this.stateChanged;
+//     }
+//
+//     public updateState(key, value) {
+//         if (!key) return;
+//
+//         let keys = key.split('.');
+//         if (keys.length != 0) {
+//             let object = this.state;
+//             for (let i = 0; i < keys.length - 1; i++) {
+//                 object = object[keys[i]];
+//             }
+//
+//             if (value != null) {
+//                 object[keys[keys.length - 1]] = value;
+//             } else {
+//                 delete object[keys[keys.length - 1]];
+//             }
+//         }
+//
+//         this.stateChanged = true;
+//     }
+//
+//     public apply(method, args) {
+//         console.log(this);
+//     }
+// }
 
-// 1. CALL
-// 2. BET
-// 3. FOLD
-export class Player {
-    cash: number = 0;
-    hand: Cards = new Cards();
-    betAmount: number = 0;
-    folded: boolean = true;
-    playerInfo = {
-        'socketid': null
-    };
-
-    private state = {
-        turn: 0,
-        action: [null, null],
-        cash: 0,
-    };
-
-    public stateHasChanged = true;
-
-    constructor(money) {
-        this.cash = money;
-    }
-
-    call() {
-        this.state.action = [1, null];
-        this.stateHasChanged = true;
-    }
-
-    bet(amount) {
-        this.betAmount += amount;
-        this.state.action =  [2, amount];
-        this.stateHasChanged = true;
-    }
-
-    fold(): void {
-        this.folded = true;
-        this.state.action = [3, null];
-        this.stateHasChanged = true;
-    }
-
-    isDone(): boolean {
-        if (this.state.action) {
-            return true;
-        }
-
-        return false;
-    }
-
-    isFolded(): boolean {
-        return this.folded;
-    }
-
-    getHand() {
-        return this.hand;
-    }
-
-    reset(deck: Cards) {
-        this.betAmount = 0;
-        this.folded = false;
-        this.state.action = null;
-        this.hand.clear();
-        if (deck != null) {
-            deck.addCards(this.hand);
-        }
-        this.stateHasChanged = true;
-    }
-
-    resetTurn() {
-        this.betAmount = 0;
-        this.folded = false;
-        this.state.action = null;
-        this.stateHasChanged = true;
-    }
-
-    has(amount) {
-        return amount >= 0 && amount < this.cash;
-    }
-
-    get(key) {
-        // console.log(this.betAmount);
-        // console.log(this.playerInfo);
-        if (this.playerInfo.hasOwnProperty(key)) {
-            return this.playerInfo[key];
-        }
-
-        return null;
-    }
-
-    set(key, value) {
-        this.playerInfo[key] = value;
-    }
-
-    getState() {
-        console.log(this.cash);
-        this.state.cash = this.cash;
-        console.log(this.state);
-        this.stateHasChanged = false;
-        return this.state;
-    }
-
-    addMoney(money) {
-        this.cash += money;
-    }
-}
-
-class Game {
-    protected players: Player[] = [];
-    protected state = {};
-    protected stateChanged: boolean = false;
-
-    public getState() {
-        for (let i = 0; i < this.players.length; i++) {
-            if (this.players[i] != null && this.players[i].stateHasChanged) {
-                this.updateState('players.' + i, this.players[i].getState());
-            }
-        }
-
-        this.stateChanged = false;
-
-        return this.state;
-    }
-
-    public hasNewState() {
-        return this.stateChanged;
-    }
-
-    public updateState(key, value) {
-        if (!key) return;
-
-        let keys = key.split('.');
-        if (keys.length != 0) {
-            let object = this.state;
-            for (let i = 0; i < keys.length - 1; i++) {
-                object = object[keys[i]];
-            }
-
-            if (value != null) {
-                object[keys[keys.length - 1]] = value;
-            } else {
-                delete object[keys[keys.length - 1]];
-            }
-        }
-
-        this.stateChanged = true;
-    }
-
-    public apply(method, args) {
-        console.log(this);
-    }
-}
-
-export class Poker extends Game{
+export class Poker extends Game {
     config = {
         maxPlayers: 6,
         dealCount: 2,
@@ -927,281 +850,239 @@ export class Poker extends Game{
     }
 }
 
-export class GameServer {
-    private io: any;
-    private port: 3000;
-    private server;
-    oldStage = -1;
-    handSent = false;
-
-    rooms = {
-
-    };
-
-    idMap = {
-
-    };
-
-    constructor(server) {
-        this.server = server;
-        // this.roomMap['lobby'] =
-        let gameServer = this;
-        this.createRoom('lobby');
-        this.createRoom('poker-0', new Poker());
-        this.createRoom('poker-1', new Poker());
-    }
-
-    public listen(port, fn) {
-        this.io = socketIo(this.server);
-        this.initIO();
-        this.server.listen(port, fn);
-        this.run();
-
-    }
-
-    public getRooms(includePlayer): object {
-        let rooms = this.rooms;
-        if (includePlayer) {
-
-        }
-
-        return this.rooms;
-    }
-
-    public getRoom(name) {
-        return this.rooms[name];
-    }
-
-    public createRoom(name, game = null) {
-        if (name == 'lobby') {
-            this.rooms[name] = {};
-        } else {
-            this.rooms[name] = {game: game};
-        }
-    }
-
-    initIO () {
-        var server = this;
-        var socketRoom = function(socket) {
-            let keys = Object.keys(socket.rooms);
-            return socket.rooms[keys[1]];
-        };
-
-        this.io.on('connection', function(socket) {
-            console.log('Player ' + socket.id + ' entered the room.');
-
-            socket.join('lobby');
-
-            socket.emit('rooms',  {rooms: server.getRooms(false)});
-
-            socket.on('disconnecting', function() {
-                console.log('Player ' + socket.id + ' has left the room.');
-                console.log(socket);
-                let room = server.getRoom(socketRoom(socket));
-                if (room && room.hasOwnProperty('game'))
-                    room.game.removePlayer(room.game.getPlayerByData('socketid', socket.id));
-            });
-
-            socket.on('join', function(data) {
-                console.log("Player attempting to join...");
-                socket.leave('lobby');
-                socket.join(data.room);
-                let room = server.getRoom(data.room);
-                // TODO Check database to see if player has money.
-                let availableSeat = room.game.getSeat();
-
-                if (availableSeat > -1) {
-                    let playerData = {
-                        socketid: socket.id,
-                        money: data.money
-                    };
-                    if (room.game.addPlayer(availableSeat, playerData)) {
-                        console.log("Player joined table. ");
-                        socket.emit('beSeated', {seatNumber: availableSeat})
-
-                    } else {
-                        console.log("Player join table failed.");
-                        socket.emit('join failed', {message: 'Join failed. Room is full.'});
-                    }
-                } else {
-                    socket.emit('join failed', {message: 'Table is full'});
-                }
-            });
-
-            socket.on('leave', function () {
-                let room = server.getRoom(socket.rooms[1]);
-                room.game.removePlayer(room.game.getPlayerByData('socketid', socket.id));
-            });
-
-            socket.on('fold', function () {
-                let room = server.getRoom(socketRoom(socket));
-                let player = room.game.getPlayerByData('socketid', socket.id);
-                if (player && room.game.playerFold(player)) {
-                    console.log("Player " + socket.id + " has folded");
-                } else {
-                    console.log("Player " + socket.id + " tried to fold, but the command failed.");
-                }
-
-                // poker.dealer();
-            });
-
-            socket.on('bet', function(money) {
-                if (!money) {
-                    console.log("Player " + socket.id + " tried to bet, but amount was null.");
-                }
-
-                money = money.money;
-
-                let room = server.getRoom(socketRoom(socket));
-
-                let player = room.game.getPlayerByData('socketid', socket.id);
-                console.log("/////////////////////");
-                if (room.game.playerBet(player, money)) {
-                    console.log("Player " + socket.id + " placed a " + parseInt(money) + " bet.");
-                } else {
-                    console.log("Player " + socket.id + " tried to bet, but the command failed.");
-                }
-                console.log("/////////////////////");
-
-                // poker.dealer();
-            });
-
-            socket.on('call', function() {
-                let room = server.getRoom(socketRoom(socket));
-
-                let player = room.game.getPlayerByData('socketid', socket.id);
-                if (room.game.playerCall(player)) {
-                    console.log("Player " + socket.id + " has called");
-                } else {
-                    console.log("Player " + socket.id + " tried to call, but the command failed.");
-                }
-            });
-
-            socket.on('action', function() {
-
-            })
-        });
-    }
-
-    private run() {
-        let server = this;
-        let rooms = this.rooms;
-
-        var loop = function () {
-            let roomKeys = Object.keys(rooms);
-            for (let roomID in rooms) {
-                // console.log("\n");
-                // console.log(room);
-                // console.log(room.game);
-                if (roomID != 'lobby' && rooms[roomID] && rooms[roomID].game.inPlay()) {
-                    let room = rooms[roomID];
-                    if (server.oldStage != room.game.stage) {
-                        server.oldStage = room.game.stage;
-
-                        if (room.game.stage == 0) {
-                            server.handSent = false;
-                        } else if (room.game.stage == 1) {
-                            if (!server.handSent) {
-                                server.sendHands(room);
-                                server.handSent = true;
-                            }
-                        } else if (room.game.stage == 2) {
-
-                        } else if (room.game.stage == 3) {
-
-                        } else if (room.game.stage == 4) {
-
-                        } else if (room.game.stage == 5) {
-
-                        }
-
-                    }
-                    room.game.dealer();
-
-                    if (room.game.hasNewState()) {
-                        server.sendGameStates(room);
-                    }
-                }
-            }
-
-            again();
-        };
-
-        var again = function() {
-            setImmediate(loop, rooms);
-        };
-
-        loop();
-    }
-
-    loop(rooms) {
-        // console.log("rooms");
-        // console.log(rooms);
-        let roomKeys = Object.keys(rooms);
-        for (let roomID in rooms) {
-            // console.log("\n");
-            // console.log(room);
-            // console.log(room.game);
-            if (roomID != 'lobby' && rooms[roomID] && rooms[roomID].game.inPlay()) {
-                let room = rooms[roomID];
-                if (this.oldStage != room.game.stage) {
-                    this.oldStage = room.game.stage;
-
-                    if (room.game.stage == 0) {
-                        this.handSent = false;
-                    } else if (room.game.stage == 1) {
-                        if (!this.handSent) {
-                            this.sendHands(room);
-                            this.handSent = true;
-                        }
-                    } else if (room.game.stage == 2) {
-
-                    } else if (room.game.stage == 3) {
-
-                    } else if (room.game.stage == 4) {
-
-                    } else if (room.game.stage == 5) {
-
-                    }
-
-                }
-                room.game.dealer();
-
-                if (room.game.hasNewState()) {
-                    this.sendGameStates(room);
-                }
-            }
-        }
-        console.log(this);
-        run();
-    };
-
-    private sendHands(room) {
-        for (let i = 0; i < room.game.players.length; i++) {
-            this.sendHand(room.game.players[i]);
-        }
-
-        this.handSent = true;
-    }
-
-    private sendHand(player) {
-        if (player != null) {
-            let id = player.get('socketid');
-            this.io.to(id).emit('hand', {hand: player.hand.getCardsArray()});
-            console.log("Hand (" + player.hand.getCardsArray().toString() + ") sent to player " + id);
-        }
-    }
-
-    private sendGameStates(room) {
-        let state = room.game.getState();
-        // console.log(poker.stateChanged);
-        for (let i = 0; i < room.game.players.length; i++) {
-            let player = room.game.players[i];
-            if (player != null) {
-                let id = player.get('socketid');
-                this.io.to(id).emit('gameState', {state: state});
-            }
-        }
-        console.log(room.game.stateChanged);
-    }
-}
+// export class GameServer {
+//     private io: any;
+//     private port: 3000;
+//     private server;
+//     oldStage = -1;
+//     handSent = false;
+//
+//     rooms = {
+//
+//     };
+//
+//     idMap = {
+//
+//     };
+//
+//     constructor(server) {
+//         this.server = server;
+//         // this.roomMap['lobby'] =
+//         let gameServer = this;
+//         this.createRoom('lobby');
+//         this.createRoom('poker-0', new Poker());
+//         this.createRoom('poker-1', new Poker());
+//     }
+//
+//     public listen(port, fn) {
+//         this.io = socketIo(this.server);
+//         this.initIO();
+//         this.server.listen(port, fn);
+//         this.run();
+//
+//     }
+//
+//     public getRooms(includePlayer): object {
+//         let rooms = this.rooms;
+//         if (includePlayer) {
+//
+//         }
+//
+//         return this.rooms;
+//     }
+//
+//     public getRoom(name) {
+//         return this.rooms[name];
+//     }
+//
+//     public createRoom(name, game = null) {
+//         if (name == 'lobby') {
+//             this.rooms[name] = {};
+//         } else {
+//             this.rooms[name] = {game: game};
+//         }
+//     }
+//
+//     initIO () {
+//         var server = this;
+//         var socketRoom = function(socket) {
+//             let keys = Object.keys(socket.rooms);
+//             return socket.rooms[keys[1]];
+//         };
+//
+//         this.io.on('connection', function(socket) {
+//             console.log('Player ' + socket.id + ' entered the room.');
+//
+//             socket.join('lobby');
+//
+//             socket.emit('rooms',  {rooms: server.getRooms(false)});
+//
+//             socket.on('disconnecting', function() {
+//                 console.log('Player ' + socket.id + ' has left the room.');
+//                 console.log(socket);
+//                 let room = server.getRoom(socketRoom(socket));
+//                 if (room && room.hasOwnProperty('game'))
+//                     room.game.removePlayer(room.game.getPlayerByData('socketid', socket.id));
+//             });
+//
+//             socket.on('join', function(data) {
+//                 console.log("Player attempting to join...");
+//                 socket.leave('lobby');
+//                 socket.join(data.room);
+//                 let room = server.getRoom(data.room);
+//                 // TODO Check database to see if player has money.
+//                 let availableSeat = room.game.getSeat();
+//
+//                 if (availableSeat > -1) {
+//                     let playerData = {
+//                         socketid: socket.id,
+//                         money: data.money
+//                     };
+//                     if (room.game.addPlayer(availableSeat, playerData)) {
+//                         console.log("Player joined table. ");
+//                         socket.emit('beSeated', {seatNumber: availableSeat})
+//
+//                     } else {
+//                         console.log("Player join table failed.");
+//                         socket.emit('join failed', {message: 'Join failed. Room is full.'});
+//                     }
+//                 } else {
+//                     socket.emit('join failed', {message: 'Table is full'});
+//                 }
+//             });
+//
+//             socket.on('leave', function () {
+//                 let room = server.getRoom(socket.rooms[1]);
+//                 room.game.removePlayer(room.game.getPlayerByData('socketid', socket.id));
+//             });
+//
+//             socket.on('fold', function () {
+//                 let room = server.getRoom(socketRoom(socket));
+//                 let player = room.game.getPlayerByData('socketid', socket.id);
+//                 if (player && room.game.playerFold(player)) {
+//                     console.log("Player " + socket.id + " has folded");
+//                 } else {
+//                     console.log("Player " + socket.id + " tried to fold, but the command failed.");
+//                 }
+//
+//                 // poker.dealer();
+//             });
+//
+//             socket.on('bet', function(money) {
+//                 if (!money) {
+//                     console.log("Player " + socket.id + " tried to bet, but amount was null.");
+//                 }
+//
+//                 money = money.money;
+//
+//                 let room = server.getRoom(socketRoom(socket));
+//
+//                 let player = room.game.getPlayerByData('socketid', socket.id);
+//                 console.log("/////////////////////");
+//                 if (room.game.playerBet(player, money)) {
+//                     console.log("Player " + socket.id + " placed a " + parseInt(money) + " bet.");
+//                 } else {
+//                     console.log("Player " + socket.id + " tried to bet, but the command failed.");
+//                 }
+//                 console.log("/////////////////////");
+//
+//                 // poker.dealer();
+//             });
+//
+//             socket.on('call', function() {
+//                 let room = server.getRoom(socketRoom(socket));
+//
+//                 let player = room.game.getPlayerByData('socketid', socket.id);
+//                 if (room.game.playerCall(player)) {
+//                     console.log("Player " + socket.id + " has called");
+//                 } else {
+//                     console.log("Player " + socket.id + " tried to call, but the command failed.");
+//                 }
+//             });
+//
+//             socket.on('action', function() {
+//
+//             })
+//         });
+//     }
+//
+//     private run() {
+//         let server = this;
+//         let rooms = this.rooms;
+//
+//         var loop = function () {
+//             let roomKeys = Object.keys(rooms);
+//             for (let roomID in rooms) {
+//                 // console.log("\n");
+//                 // console.log(room);
+//                 // console.log(room.game);
+//                 if (roomID != 'lobby' && rooms[roomID] && rooms[roomID].game.inPlay()) {
+//                     let room = rooms[roomID];
+//                     if (server.oldStage != room.game.stage) {
+//                         server.oldStage = room.game.stage;
+//
+//                         if (room.game.stage == 0) {
+//                             server.handSent = false;
+//                         } else if (room.game.stage == 1) {
+//                             if (!server.handSent) {
+//                                 server.sendHands(room);
+//                                 server.handSent = true;
+//                             }
+//                         } else if (room.game.stage == 2) {
+//
+//                         } else if (room.game.stage == 3) {
+//
+//                         } else if (room.game.stage == 4) {
+//
+//                         } else if (room.game.stage == 5) {
+//
+//                         }
+//
+//                     }
+//                     room.game.dealer();
+//
+//                     if (room.game.hasNewState()) {
+//                         server.sendGameStates(room);
+//                     }
+//                 }
+//             }
+//
+//             again();
+//         };
+//
+//         var again = function() {
+//             setImmediate(loop, rooms);
+//         };
+//
+//         loop();
+//     }
+//
+//     private sendHands(room) {
+//         for (let i = 0; i < room.game.players.length; i++) {
+//             this.sendHand(room.game.players[i]);
+//         }
+//
+//         this.handSent = true;
+//     }
+//
+//     private sendHand(player) {
+//         if (player != null) {
+//             let id = player.get('socketid');
+//             this.io.to(id).emit('hand', {hand: player.hand.getCardsArray()});
+//             console.log("Hand (" + player.hand.getCardsArray().toString() + ") sent to player " + id);
+//         }
+//     }
+//
+//     private sendGameStates(room) {
+//         let state = room.game.getState();
+//         // console.log(poker.stateChanged);
+//         for (let i = 0; i < room.game.players.length; i++) {
+//             let player = room.game.players[i];
+//             if (player != null) {
+//                 let id = player.get('socketid');
+//                 this.io.to(id).emit('gameState', {state: state});
+//             }
+//         }
+//         console.log(room.game.stateChanged);
+//     }
+// }

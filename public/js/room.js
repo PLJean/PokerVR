@@ -1,7 +1,7 @@
 var AFRAME = require('aframe');
 var html = require('aframe-html-shader');
 // var gui = require('./gui.js');
-var client = require('../../app/client.js');
+var client = require('../../app/clients/client.js');
 
 
 function stringToVector(string) {
