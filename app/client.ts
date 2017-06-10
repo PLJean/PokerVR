@@ -57,9 +57,9 @@ export class PokerClient extends Client {
         this.seat = seat;
     }
 
-    public join(amount) {
+    public join(amount, roomID) {
         console.log("Joining table.");
-        this.socket.emit('join', {money: amount});
+        this.socket.emit('join', {money: amount, room: 'poker-0'});
     }
 
     public leave() {

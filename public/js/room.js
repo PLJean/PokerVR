@@ -271,7 +271,7 @@ window.onload = function () {
         update: function() {
             // console.log("in update");
             if (this.data.seat !=  null) {
-                poker.join(100, this.data.seat);
+                poker.join(100);
             }
         },
         reset: function() {
