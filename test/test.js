@@ -1,7 +1,7 @@
 var assert = require('assert');
 var PokerEvaluator = require("poker-evaluator");
 
-let pokerApp = require(__dirname + '/../public/js/poker.js');
+let pokerApp = require(__dirname + '/../app/game/poker.js');
 // let subsets = pokerApp.subsets;
 let Poker = pokerApp.Poker;
 // let cardList = Object.keys(pokerApp.cardSymbolMap);
