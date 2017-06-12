@@ -34,12 +34,29 @@ export class GameServer {
     }
 
     public getRooms(includePlayer): object {
-        let rooms = this.rooms;
+        let rooms = Object.keys(this.rooms);
+        let returnData = {};
+        for (let room in this.rooms) {
+            if (room != 'lobby') {
+                console.log(this.rooms[room]);
+                let game = this.rooms[room].game;
+                // console.log("playerCount: " + game.getConfig('playerCount'));
+                returnData[room] = {
+                    game: 'Poker',
+                    type: game.getConfig('type'),
+                    minimum: game.getConfig('minimum'),
+                    maximum: game.getConfig('maximum'),
+                    playerCount: game.playerCount,
+                    maxPlayerCount: game.getConfig('maxPlayers')
+                };
+            }
+        }
+
         if (includePlayer) {
 
         }
 
-        return this.rooms;
+        return returnData;
     }
 
     public getRoom(name) {
@@ -66,11 +83,15 @@ export class GameServer {
 
             socket.join('lobby');
 
-            socket.emit('rooms',  {rooms: server.getRooms(false)});
+            socket.on('needRooms', function () {
+                console.log("Sending rooms.");
+                console.log(server.getRooms(false));
+                socket.emit('rooms',  {rooms: server.getRooms(false)});
+            });
 
             socket.on('disconnecting', function() {
                 console.log('Player ' + socket.id + ' has left the room.');
-                console.log(socket);
+                // console.log(socket);
                 let room = server.getRoom(socketRoom(socket));
                 if (room && room.hasOwnProperty('game'))
                     room.game.removePlayer(room.game.getPlayerByData('socketid', socket.id));

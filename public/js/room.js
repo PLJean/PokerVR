@@ -1,6 +1,4 @@
 var AFRAME = require('aframe');
-var html = require('aframe-html-shader');
-// var gui = require('./gui.js');
 var client = require('../../app/clients/client.js');
 
 
@@ -12,7 +10,7 @@ function stringToVector(string) {
 window.onload = function () {
     var player = document.querySelector('#player');
     var table = document.querySelector('#table');
-
+    var cursor = document.querySelector('#cursor');
     var poker = new client.PokerClient();
     var bet  = poker.bet;
     var call = poker.call;
@@ -101,6 +99,349 @@ window.onload = function () {
         }
     });
 
+    AFRAME.registerComponent('card', {
+        schema: {
+            suit: {type: 'string'},
+            symbol: {type: 'string'}
+        },
+        front: null,
+        back: null,
+        init: function () {
+            var frontMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            var backMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            var geometry = new THREE.PlaneGeometry(1, 1);
+            geometry.applyMatrix( new THREE.Matrix4().makeTranslation(0, 0.5, 0 ) );
+
+            this.front = new THREE.Mesh(geometry, frontMaterial);
+            this.back = new THREE.Mesh(geometry, backMaterial);
+
+            this.el.setObject3D('front', this.front);
+            this.el.setObject3D('back', this.back);
+
+            // Set the scale of card mesh to the 1.4/1 ratio of a card
+            // TODO Initialize card as PlaneGeometry(1.4, 1)
+            this.front.scale.set(1, 1.4, 1);
+            this.back.scale.set(1, 1.4, 1);
+
+            // Rotate back side to 180 degrees of front side;
+            this.back.rotation.y = Math.PI;
+            this.generateFrontImage();
+            this.generateBackImage();
+        },
+        update: function() {
+            // this.generateFrontImage();
+        },
+        setCard: function(symbol, suit) {
+            this.data.symbol = symbol;
+
+            switch(suit[0].toUpperCase()) {
+                case 'S':
+                    this.data.suit = 'spades';
+                    break;
+                case 'C':
+                    this.data.suit = 'clubs';
+                    break;
+                case 'H':
+                    this.data.suit = 'hearts';
+                    break;
+                case 'D':
+                    this.data.suit = 'diamonds';
+            }
+
+
+            this.generateFrontImage();
+        },
+        generateBackImage: function() {
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext("2d");
+
+            canvas.width = 250;
+            canvas.height = 350;
+
+            // Fill background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Fill inner layer
+            ctx.fillStyle = 'red';
+            ctx.fillRect(25, 35, canvas.width - 25 * 2, canvas.height - 35 * 2);
+
+            this.back.material.map = new THREE.Texture(canvas);
+            this.back.material.map.needsUpdate = true;
+        },
+        generateFrontImage: function() {
+            // console.log("in");
+            if (this.data.suit != '' && this.data.symbol != '') {
+                // console.log("generating card image");
+                var canvas = document.createElement('canvas');
+                canvas.width = 250;
+                canvas.height = 350;
+
+                // Fill background
+                var ctx = canvas.getContext("2d");
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                let suit = this.data.suit;
+                var suitImage = document.querySelector('#' + suit);
+                var symbol = this.data.symbol;
+                if (symbol.length > 1) {
+                    symbol = symbol[1];
+                }
+                var symbolNum = parseInt(symbol);
+
+                if (symbol == 'J' || symbol == 'Q' || symbol == 'K' || symbol == 'A' ||
+                    (symbolNum != null && symbolNum >= 1 && symbolNum <= 10)) {
+                }
+
+                else {
+                    return;
+                }
+
+                if (suit == 'spades' || suit == 'clubs') {
+                    ctx.fillStyle = 'black';
+                } else if (suit == 'hearts' || suit == 'diamonds') {
+                    ctx.fillStyle = 'red';
+                } else {
+                    return;
+                }
+
+                ctx.font = "48px Symbol";
+
+                // Draw Top Suit
+                ctx.drawImage(suitImage, 24, 64, 48, 48);
+
+                // Draw Top Symbol
+                ctx.fillText(symbol, 32, 54);
+
+                ctx.save();
+
+                // Move origin to middle
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+
+                // // Draw Middle Suit
+                ctx.drawImage(suitImage, -48, -48, 96, 96);
+
+                // Upside-down
+                ctx.rotate(Math.PI);
+
+                // Move origin back to 0,0 (now bottom-right corner)
+                ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
+                // Draw Bottom Suit
+                ctx.drawImage(suitImage, 24, 64, 48, 48);
+
+                // Draw Bottom Symbol
+                ctx.fillText(symbol, 32, 54);
+
+                ctx.restore();
+
+                this.front.material.map = new THREE.Texture(canvas);
+                this.front.material.map.needsUpdate = true;
+            }
+        },
+        rotate: function () {
+            var lastRotation = this.el.getAttribute('rotation');
+            // console.log(lastRotation);
+            this.el.setAttribute('rotation', new THREE.Vector3(0, 0, 0));
+            // console.log(this.el.getAttribute('rotation'));
+        },
+        unrotate: function() {
+            var lastRotation = this.el.getAttribute('rotation');
+            this.el.setAttribute('rotation', new THREE.Vector3(90, 0, 0));
+
+        }
+    });
+
+    AFRAME.registerComponent('collider-check', {
+        init: function () {
+
+        },
+        tick: function() {
+
+        }
+    });
+
+    AFRAME.registerComponent('game-rooms', {
+        schema: {
+            page: {type: 'number', default: 0},
+            perPage: {type: 'number', default: 5}
+        },
+        raycaster: new THREE.Raycaster(),
+        highlighted: null,
+        rooms: null,
+        init: function () {
+            for (let i = 0; i < this.data.perPage; i++) {
+                var geometry = new THREE.PlaneGeometry(8, 1);
+
+                var material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+                var row = new THREE.Mesh(geometry, material);
+                row.position.set(0, -i, 0);
+                this.el.setObject3D('row-' + i, row);
+            }
+
+            let self = this;
+            this.el.addEventListener('raycaster-intersected', function (event) {
+                // console.log(event);
+                let intersection = event.detail.intersection;
+                for (let i = 0; i < 5; i++) {
+                    if (intersection.object == self.el.getObject3D('row-' + i)) {
+                        self.highlight(i);
+                        break;
+                    }
+                }
+                // for (let i = 0; i < intersections.length; i++) {
+                //     let intersect = intersections[i];
+                //     console.log(intersect.object);
+                // }
+            });
+
+            this.el.addEventListener('raycaster-intersected-cleared', function() {
+               self.unhighlight(self.el.highlighted);
+            });
+
+            this.updateRoomList();
+
+            this.requestRoomsList();
+        },
+        tick: function() {
+            let rooms = poker.getRooms();
+            if (rooms) {
+                this.el.setAttribute('visible', true);
+                this.updateRoomList(rooms);
+            }
+            // console.log(cursor);
+            // this.raycaster.setFromCamera(cursor.getObject3D, camera);
+
+            // var intersects = this.raycaster.intersectObjects( this.el.getObject3D('row-0') );
+            // console.log(intersects);
+        },
+        requestRoomsList: function () {
+            poker.requestRooms();
+        },
+        updateRoomList: function(rooms) {
+            // console.log("generating card image");
+            let roomKeys;
+            if (rooms) {
+                roomKeys = Object.keys(rooms);
+                this.rooms = rooms;
+            }
+            else
+                roomKeys = [];
+
+            let start = this.data.page * this.data.perPage;
+            // let end = start + this.data.perPage;
+            for (let i = 0; i < this.data.perPage; i++) {
+                var key = roomKeys[start + i];
+                var canvas = document.createElement('canvas');
+                var ctx = canvas.getContext("2d");
+                canvas.width = 1024;
+                canvas.height = 128;
+                ctx.font = "48px Symbol";
+
+                // Fill background
+                ctx.fillStyle = '#efefe1';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#000000';
+                if (!i)
+                ctx.fillRect(0,0,1024,10);
+                ctx.fillRect(0,118,1024,10);
+                ctx.fillRect(0, 0, 10, 128);
+                ctx.fillRect(1014, 0, 1024, 128);
+                let row = this.el.getObject3D('row-' + i);
+                if (i < roomKeys.length) {
+                    let room = rooms[key];
+                    // Draw Top Symbol
+                    ctx.fillText(room['playerCount'] + '/' + room['maxPlayerCount'] + ' Players', 50, 64);
+                    ctx.fillText(room['type'],400 , 64);
+                    ctx.fillText(room['minimum'] + '-' + room['maximum'] + ' Buy In', 700, 64);
+                    // console.log(this.rows[i].material.map);
+                    row.material.map = new THREE.Texture(canvas);
+                    row.material.map.needsUpdate = true;
+                } else {
+                    // Draw Top Symbol
+                    row.material.map = new THREE.Texture(canvas);
+                    row.material.map.needsUpdate = true;
+                }
+
+            }
+        },
+        highlight: function(i) {
+            if (this.highlighted == i) return;
+            this.unhighlight();
+
+            let roomIndex = this.data.page * this.data.perPage + i;
+            let row = this.el.getObject3D('row-' + i);
+            let keys = Object.keys(this.rooms);
+
+            if (roomIndex < keys.length) {
+                var canvas = document.createElement('canvas');
+                var ctx = canvas.getContext("2d");
+                canvas.width = 1024;
+                canvas.height = 128;
+                ctx.font = "48px Symbol";
+
+                // Fill background
+                ctx.fillStyle = '#A49480';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#000000';
+                if (!i)
+                    ctx.fillRect(0,0,1024,10);
+                ctx.fillRect(0,118,1024,10);
+                ctx.fillRect(0, 0, 10, 128);
+                ctx.fillRect(1014, 0, 1024, 128);
+
+                let room = this.rooms[keys[roomIndex]];
+                // Draw Top Symbol
+                ctx.fillText(room['playerCount'] + '/' + room['maxPlayerCount'] + ' Players', 50, 64);
+                ctx.fillText(room['type'],400 , 64);
+                ctx.fillText(room['minimum'] + '-' + room['maximum'] + ' Buy In', 700, 64);
+                // console.log(this.rows[i].material.map);
+                row.material.map = new THREE.Texture(canvas);
+                row.material.map.needsUpdate = true;
+                this.highlighted = i;
+            }
+
+        },
+        unhighlight: function() {
+            if (this.highlighted == null) return;
+            let i = this.highlighted;
+            let roomIndex = this.data.page * this.data.perPage + i;
+            let row = this.el.getObject3D('row-' + i);
+            let keys = Object.keys(this.rooms);
+
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext("2d");
+            canvas.width = 1024;
+            canvas.height = 128;
+            ctx.font = "48px Symbol";
+
+            // Fill background
+            ctx.fillStyle = '#efefe1';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (roomIndex < keys.length) {
+                ctx.fillStyle = '#000000';
+                if (!i)
+                    ctx.fillRect(0,0,1024,10);
+                ctx.fillRect(0,118,1024,10);
+                ctx.fillRect(0, 0, 10, 128);
+                ctx.fillRect(1014, 0, 1024, 128);
+
+                let room = this.rooms[keys[roomIndex]];
+                // Draw Top Symbol
+                ctx.fillText(room['playerCount'] + '/' + room['maxPlayerCount'] + ' Players', 50, 64);
+                ctx.fillText(room['type'], 400, 64);
+                ctx.fillText(room['minimum'] + '-' + room['maximum'] + ' Buy In', 700, 64);
+            }
+            row.material.map = new THREE.Texture(canvas);
+            row.material.map.needsUpdate = true;
+            this.highlighted = null;
+        }
+    });
 
     AFRAME.registerComponent('scene-scale', {
         schema: {
@@ -166,7 +507,7 @@ window.onload = function () {
                 this.data.seat = seat;
 
                 let chair = document.querySelector('#chair-' + seat.toString()).components.seat;
-                chair.sitDown();
+                // chair.sitDown();
             }
 
             if (hand != null) {
@@ -277,171 +618,6 @@ window.onload = function () {
         reset: function() {
             this.card0 = null;
             this.card1 = null;
-        }
-    });
-
-    AFRAME.registerComponent('card', {
-        schema: {
-            suit: {type: 'string'},
-            symbol: {type: 'string'}
-        },
-        front: null,
-        back: null,
-        init: function () {
-            var frontMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            var backMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            var geometry = new THREE.PlaneGeometry(1, 1);
-            geometry.applyMatrix( new THREE.Matrix4().makeTranslation(0, 0.5, 0 ) );
-
-            this.front = new THREE.Mesh(geometry, frontMaterial);
-            this.back = new THREE.Mesh(geometry, backMaterial);
-
-            this.el.setObject3D('front', this.front);
-            this.el.setObject3D('back', this.back);
-
-            // Set the scale of card mesh to the 1.4/1 ratio of a card
-            // TODO Initialize card as PlaneGeometry(1.4, 1)
-            this.front.scale.set(1, 1.4, 1);
-            this.back.scale.set(1, 1.4, 1);
-
-            // Rotate back side to 180 degrees of front side;
-            this.back.rotation.y = Math.PI;
-            this.generateFrontImage();
-            this.generateBackImage();
-        },
-        update: function() {
-            // this.generateFrontImage();
-        },
-        setCard: function(symbol, suit) {
-            this.data.symbol = symbol;
-
-            switch(suit[0].toUpperCase()) {
-                case 'S':
-                    this.data.suit = 'spades';
-                    break;
-                case 'C':
-                    this.data.suit = 'clubs';
-                    break;
-                case 'H':
-                    this.data.suit = 'hearts';
-                    break;
-                case 'D':
-                    this.data.suit = 'diamonds';
-            }
-
-
-            this.generateFrontImage();
-        },
-        generateBackImage: function() {
-            // console.log("generate back image");
-            var canvas = document.createElement('canvas');
-            var ctx = canvas.getContext("2d");
-
-            canvas.width = 250;
-            canvas.height = 350;
-
-            // Fill background
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Fill inner layer
-            ctx.fillStyle = 'red';
-            ctx.fillRect(25, 35, canvas.width - 25 * 2, canvas.height - 35 * 2);
-
-            this.back.material.map = new THREE.Texture(canvas);
-            this.back.material.map.needsUpdate = true;
-        },
-        generateFrontImage: function() {
-            // console.log("in");
-            if (this.data.suit != '' && this.data.symbol != '') {
-                // console.log("generating card image");
-                var canvas = document.createElement('canvas');
-                canvas.width = 250;
-                canvas.height = 350;
-
-                // Fill background
-                var ctx = canvas.getContext("2d");
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                let suit = this.data.suit;
-                var suitImage = document.querySelector('#' + suit);
-                var symbol = this.data.symbol;
-                if (symbol.length > 1) {
-                    symbol = symbol[1];
-                }
-                var symbolNum = parseInt(symbol);
-                // console.log(symbol);
-                // console.log(suit);
-                if (symbol == 'J' || symbol == 'Q' || symbol == 'K' || symbol == 'A' ||
-                    (symbolNum != null && symbolNum >= 1 && symbolNum <= 10)) {
-                }
-
-                else {
-                    return;
-                }
-
-                // console.log("SYMBOL IS: " + symbol);
-                // console.log("SUIT IS: " + suit);
-                if (suit == 'spades' || suit == 'clubs') {
-                    // console.log("coloring black");
-                    ctx.fillStyle = 'black';
-                } else if (suit == 'hearts' || suit == 'diamonds') {
-                    // console.log("coloring red");
-                    ctx.fillStyle = 'red';
-                } else {
-                    // console.log("Wrong suit.");
-                    return;
-                }
-
-                ctx.font = "48px Symbol";
-                // // Draw Middle Suit
-                // ctx.drawImage(suitImage, 96, 42, 96, 96);
-                // console.log(suitImage);
-                // Draw Top Suit
-                ctx.drawImage(suitImage, 24, 64, 48, 48);
-
-                // Draw Top Symbol
-                ctx.fillText(symbol, 32, 54);
-
-                ctx.save();
-
-                // Move origin to middle
-                ctx.translate(canvas.width / 2, canvas.height / 2);
-
-                // // Draw Middle Suit
-                ctx.drawImage(suitImage, -48, -48, 96, 96);
-
-                // Upside-down
-                ctx.rotate(Math.PI);
-
-                // Move origin back to 0,0 (now bottom-right corner)
-                ctx.translate(-canvas.width / 2, -canvas.height / 2);
-
-                // Draw Bottom Suit
-                ctx.drawImage(suitImage, 24, 64, 48, 48);
-
-                // Draw Bottom Symbol
-                ctx.fillText(symbol, 32, 54);
-
-                ctx.restore();
-
-                this.front.material.map = new THREE.Texture(canvas);
-                this.front.material.map.needsUpdate = true;
-                // console.log(this.front.material.map);
-                // console.log("done");
-            }
-        },
-        rotate: function () {
-            var lastRotation = this.el.getAttribute('rotation');
-            // console.log(lastRotation);
-            this.el.setAttribute('rotation', new THREE.Vector3(0, 0, 0));
-            // console.log(this.el.getAttribute('rotation'));
-        },
-        unrotate: function() {
-            var lastRotation = this.el.getAttribute('rotation');
-            this.el.setAttribute('rotation', new THREE.Vector3(90, 0, 0));
-
         }
     });
 

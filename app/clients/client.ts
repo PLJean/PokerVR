@@ -21,6 +21,7 @@ export class PokerClient extends Client {
     hand = null;
     seat = null;
     players = null;
+    rooms = null;
 
     constructor() {
         super();
@@ -37,6 +38,17 @@ export class PokerClient extends Client {
         this.socket.on('beSeated', function(data) {
             client.setSeat(data['seatNumber']);
         });
+
+        this.socket.on('rooms', function(data) {
+            console.log("rooms: ");
+            console.log(data['rooms']);
+            client.setRooms(data['rooms']);
+        });
+    }
+
+    public requestRooms() {
+        console.log("requesting rooms...");
+        this.socket.emit('needRooms');
     }
 
     public setHand(hand) {
@@ -45,6 +57,10 @@ export class PokerClient extends Client {
 
     public setSeat(seat) {
         this.seat = seat;
+    }
+
+    public setRooms(rooms) {
+        this.rooms = rooms;
     }
 
     public join(amount, roomID) {
@@ -72,6 +88,16 @@ export class PokerClient extends Client {
         this.socket.emit('call');
     }
 
+    public getRooms() {
+        if (this.rooms == null) return null;
+
+        else {
+            var newRooms = this.rooms;
+            this.rooms = null;
+            return newRooms;
+        }
+    }
+
     public getHand() {
         if (this.hand == null) return null;
 
@@ -83,7 +109,7 @@ export class PokerClient extends Client {
     }
 
     public getSeat() {
-            if (this.seat == null) return null;
+        if (this.seat == null) return null;
 
         else {
             var newSeat = this.seat;

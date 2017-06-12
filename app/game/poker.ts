@@ -221,35 +221,21 @@ export class Poker extends Game {
     config = {
         maxPlayers: 6,
         dealCount: 2,
-        minimum: 2
+        minimum: 20,
+        maximum: 200,
+        type: 'No Limit' // Pot, Fixed, or No Limit
     };
 
     private deck: Deck = new Deck();
     private dealt: Cards  = new Cards();
     private stage: number = 0;
-    // private players: Player[] = [];
     private totalPot = 0;
 
-    private joinQueue = [];
-    private leaveQueue = [];
     private playing = false;
     private currentPlayerIndex = 0;
     private stageInitialized = false;
     private forceNextStage = false;
-    // private callbacks = {};
-
-    // private state = {
-    //     game: 'Poker',
-    //     playing: false,
-    //     players: {
-    //
-    //     },
-    //     dealt: [],
-    //     stage: 0
-    // };
-
-    // private stateChanged = false;
-
+    private playerCount = 0;
 
     constructor(config = null) {
         super();
@@ -270,13 +256,18 @@ export class Poker extends Game {
         };
    }
 
-    // getState() {
-    //
-    // }
+   getConfig(name) {
+        if (!name) {
+            return this.config;
+        }
+        else if (name in this.config) {
+            return this.config[name];
+        }
+   }
 
-    // hasNewState() {
-    //     return this.stateChanged;
-    // }
+   getPlayerCount() {
+       return this.playerCount;
+   }
 
     playerBet(player, amount) {
         // console.log(player == this.currentPlayer());
@@ -330,7 +321,7 @@ export class Poker extends Game {
 
         // Update state
         this.updateState('players.' + seatNumber.toString(), {});
-
+        this.playerCount += 1;
         return true;
     }
 
@@ -355,6 +346,7 @@ export class Poker extends Game {
         }
 
         this.updateState('players.' + seatNumber.toString(), null);
+        this.playerCount -= 1;
         return true;
     }
 

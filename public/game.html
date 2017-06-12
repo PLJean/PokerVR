@@ -7,7 +7,6 @@
         <link rel="stylesheet" type="text/css" href="css/main.css">
 
         <script src="js/bundle.js"></script>
-
     </head>
     <body>
 
@@ -34,8 +33,11 @@
 
             <!--<a-entity id="game-controls" position="0 0 -2"-->
                       <!--button-panel="values: Fold, Call, Bet, 100;"></a-entity>-->
+            <!--<a-entity geometry="primitive: box" material="shader: html; target: #htmlElement"></a-entity>-->
 
-            <a-entity position="5.045 2 7.721" rotation="0 33.5 0" geometry="primitive: plane; width: 4; height: 6" material="shader: html; target: #htmlElement;"></a-entity>
+            <a-entity class="clickable" id="game-rooms-menu" game-rooms position="5.3 2 8.2" rotation="0 82.4 0" visible="false">
+
+            </a-entity>
 
             <a-entity id="table"  obj-model="obj: #poker-table-obj; mtl: #poker-table-mtl">
                 <a-entity id="card-spawns" dealer>
@@ -132,21 +134,18 @@
                 <a-entity id="chair-5" seat="5" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="-4.285 0 1.178" rotation="0 300 0"></a-entity>
             </a-entity>
 
-            <a-camera id="player" wasd-controls-enabled="false" position="8 0 12" rotation="0 33.5 0">
-                <a-entity id="cursor" cursor raycaster="objects: .clickable" position="0 0 -1" geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.015" material="color: red;"></a-entity>
-            </a-camera>
+            <!--<a-camera id="player" wasd-controls-enabled="false" position="11.7 0 9.2" rotation="0 80 0" collider-check>-->
+                <!--<a-entity raycaster="objects: .collidable" position="0 -0.9 0" rotation="90 0 0"></a-entity>-->
+                <!--<a-entity id="cursor" cursor position="0 0 -1" geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.015" material="color: red;"></a-entity>-->
+            <!--</a-camera>-->
+
+            <a-entity id="player" camera look-controls position="11.7 0 9.2" rotation="0 80 0">
+                <a-entity id="cursor" cursor raycaster="objects: .clickable" collider-check position="0 0 -1" geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.015" material="color: red;"></a-entity>\
+            </a-entity>
+            <!--<a-entity class="collidable" geometry="primitive: box" position="1 0 0"></a-entity>-->
 
         </a-scene>
 
-        <div style="position: fixed; left: 0; top: 0; z-index: -1; overflow: hidden">
-            <div id="htmlElement" style="background: blue; color: #333; font-size: 48px">
-                <div style="border: 2px solid black; margin-left: 10%; margin-right: 10%;">
-                    PLAY
-                </div>
-                <div>
-                </div>
-            </div>
-        </div>
     </body>
 </html>
 
