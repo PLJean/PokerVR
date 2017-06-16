@@ -536,7 +536,20 @@ function Room () {
             poker.on('dealt', function() {
                 console.log("hasChanged() - Dealt has changed");
                 let dealt = poker.state['dealt'];
-                if (dealt.length == 3) {
+                if (dealt.length == 0) {
+                    let dealtElem0 = document.querySelector('#dealt-card-0');
+                    let dealtElem1 = document.querySelector('#dealt-card-1');
+                    let dealtElem2 = document.querySelector('#dealt-card-2');
+                    let dealtElem3 = document.querySelector('#dealt-card-3');
+                    let dealtElem4 = document.querySelector('#dealt-card-4');
+
+                    dealtElem0.setAttribute('visible', false);
+                    dealtElem1.setAttribute('visible', false);
+                    dealtElem2.setAttribute('visible', false);
+                    dealtElem3.setAttribute('visible', false);
+                    dealtElem4.setAttribute('visible', false);
+                }
+                else if (dealt.length == 3) {
                     let dealtElem0 = document.querySelector('#dealt-card-0');
                     let dealtElem1 = document.querySelector('#dealt-card-1');
                     let dealtElem2 = document.querySelector('#dealt-card-2');
