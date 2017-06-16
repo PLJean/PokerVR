@@ -7,7 +7,7 @@ function stringToVector(string) {
     return {x: parseFloat(nums[0]), y: parseFloat(nums[1]), z: parseFloat(nums[2])};
 }
 
-window.onload = function () {
+function Room () {
     var player = document.querySelector('#player');
     var table = document.querySelector('#table');
     var cursor = document.querySelector('#cursor');
@@ -72,25 +72,18 @@ window.onload = function () {
             type: 'number'
         },
         init: function () {
-            var el = this.el;
-            // el.addEventListener('click', function (event) {
-            //     let position = el.getAttribute('position');
-            //     let playerHeight = player.getAttribute('position').y;
-            //     // let tablePosition = player.getAttribute('position');
-            //
-            //     player.setAttribute('position', new THREE.Vector3(position.x,  playerHeight, position.z));
-            //     // player.object3D.lookAt(new THREE.Vector3(tablePosition));
-            // });
         },
         sitDown() {
+            let player = document.querySelector('#player');
+
             console.log("Sitting down at seat #" + this.data);
             let position = this.el.getAttribute('position');
             let rotation = this.el.getAttribute('rotation');
+            console.log("player: " + player);
             let playerHeight = player.getAttribute('position').y;
             let dealtCards = document.querySelector('#dealt-cards');
             let controls = document.querySelector('#controls-' + this.data);
             let chips = document.querySelector('#chips-' + this.data);
-
             player.setAttribute('position', new THREE.Vector3(position.x,  playerHeight, position.z));
             player.setAttribute('rotation', new THREE.Vector3(rotation.x, rotation.y, rotation.z));
             dealtCards.setAttribute('rotation', new THREE.Vector3(rotation.x, rotation.y, rotation.z));
@@ -253,15 +246,6 @@ window.onload = function () {
         }
     });
 
-    AFRAME.registerComponent('collider-check', {
-        init: function () {
-
-        },
-        tick: function() {
-
-        }
-    });
-
     AFRAME.registerComponent('game-rooms', {
         schema: {
             page: {type: 'number', default: 0},
@@ -295,6 +279,15 @@ window.onload = function () {
                 //     let intersect = intersections[i];
                 //     console.log(intersect.object);
                 // }
+            });
+
+            this.el.addEventListener('click', function(event) {
+                console.log('clicked');
+                let roomIndex = self.data.page * self.data.perPage + self.highlighted;
+                if (self.highlighted != null) {
+                    console.log("highlighted: " + self.highlighted);
+                    poker.join(100, roomIndex)
+                }
             });
 
             this.el.addEventListener('raycaster-intersected-cleared', function() {
@@ -495,124 +488,237 @@ window.onload = function () {
         dealt: [],
         init: function() {
             // console.log("init");
-        },
-        tick: function() {
-            var seat = poker.getSeat();
-            var hand = poker.getHand();
-            var players = poker.getPlayers();
-            var state = poker.getState();
-
-            if (seat != null) {
-                console.log("Sitting down in seat #" + seat);
-                this.data.seat = seat;
-
-                let chair = document.querySelector('#chair-' + seat.toString()).components.seat;
-                // chair.sitDown();
-            }
-
-            if (hand != null) {
-                console.log(hand);
-                this.card0 = document.querySelector('#card-' + this.data.seat.toString() + '-0').components.card;
-                this.card1 = document.querySelector('#card-' + this.data.seat.toString() + '-1').components.card;
-
-                // console.log(this.card0);
-                this.card0.setCard(hand[0][0] == '0' ? '10' : hand[0][0], hand[0][1]);
-                this.card1.setCard(hand[1][0] == '0' ? '10' : hand[1][0], hand[1][1]);
-                this.card0.rotate();
-                this.card1.rotate();
-            }
-
-            if (players != null) {
-                console.log(players);
+            let dealer = this;
+            poker.on('players', function() {
+                let players = poker.state['players'];
                 for (let playerSeat in players) {
                     // console.log(playerSeat);
+
                     let cardSpawn = document.querySelector('#card-spawn-' + playerSeat.toString());
                     let playerChips = document.querySelector('#chips-' + playerSeat.toString());
-                    console.log(playerChips);
-                    if (cardSpawn != null) {
+                    // console.log(playerChips);
+                    if (cardSpawn) {
                         cardSpawn.setAttribute('visible', true);
                         playerChips.setAttribute('visible', true);
                     }
                     playerChips = document.querySelector('#chips-' + playerSeat.toString());
-                    console.log(playerChips);
+                    // console.log(playerChips);
 
                 }
-            }
+            });
 
-            if (state != null) {
-                console.log(state);
-                let dealtLength = this.dealt.length;
-                let chips = document.querySelector('#chips-' + this.data.seat.toString());
-                // let playerData = state
-                chips.components['chips'].setAmount(state.players[this.data.seat].cash);
+            poker.on('seat', function() {
+                console.log("hasChanged() - Seat has changed");
 
-                console.log(state.dealt);
-                console.log(state['dealt']);
-                if (state.dealt.length > dealtLength) {
-                    this.dealt = state.dealt;
-                    if (dealtLength == 0) {
-                        let dealtElem0 = document.querySelector('#dealt-card-0');
-                        let dealtElem1 = document.querySelector('#dealt-card-1');
-                        let dealtElem2 = document.querySelector('#dealt-card-2');
-                        let dealt0 = dealtElem0.components.card;
-                        let dealt1 = dealtElem1.components.card;
-                        let dealt2 = dealtElem2.components.card;
+                let seat = poker.state['seat'];
+                let chair = document.querySelector('#chair-' + seat.toString()).components.seat;
 
-                        dealt0.setCard(this.dealt[0][0], this.dealt[0][1]);
-                        dealt1.setCard(this.dealt[1][0], this.dealt[1][1]);
-                        dealt2.setCard(this.dealt[2][0], this.dealt[2][1]);
+                dealer.data.seat = seat;
+                chair.sitDown();
+            });
 
-                        console.log(dealtElem0);
-                        dealtElem0.setAttribute('visible', true);
-                        dealtElem1.setAttribute('visible', true);
-                        dealtElem2.setAttribute('visible', true);
-                        console.log("Flop");
-                    }
+            poker.on('hand', function() {
+                console.log("hasChanged() - Hand has changed");
+                let hand = poker.state['hand'];
+                console.log(hand);
+                if (hand.length != 0) {
+                    dealer.card0 = document.querySelector('#card-' + dealer.data.seat.toString() + '-0').components.card;
+                    dealer.card1 = document.querySelector('#card-' + dealer.data.seat.toString() + '-1').components.card;
 
-                    else if (dealtLength == 3) {
-                        let dealtElem3 = document.querySelector('#dealt-card-3');
-                        let dealt3 = dealtElem3.components.card;
-
-                        dealt3.setCard(this.dealt[3][0], this.dealt[3][1]);
-
-                        dealtElem3.setAttribute('visible', true);
-                        console.log("Turn");
-
-                    }
-
-                    else if (dealtLength == 4) {
-                        let dealtElem4 = document.querySelector('#dealt-card-4');
-                        let dealt4 = dealtElem4.components.card;
-
-                        dealt4.setCard(this.dealt[4][0], this.dealt[4][1]);
-
-                        dealtElem4.setAttribute('visible', true);
-                        console.log("River");
-
-                    }
+                    // console.log(this.card0);
+                    dealer.card0.setCard(hand[0][0] == '0' ? '10' : hand[0][0], hand[0][1]);
+                    dealer.card1.setCard(hand[1][0] == '0' ? '10' : hand[1][0], hand[1][1]);
+                    dealer.card0.rotate();
+                    dealer.card1.rotate();
                 }
+            });
 
-                else if (state.dealt.length == 0) {
-                    this.dealt = state.dealt;
+            poker.on('dealt', function() {
+                console.log("hasChanged() - Dealt has changed");
+                let dealt = poker.state['dealt'];
+                if (dealt.length == 3) {
                     let dealtElem0 = document.querySelector('#dealt-card-0');
                     let dealtElem1 = document.querySelector('#dealt-card-1');
                     let dealtElem2 = document.querySelector('#dealt-card-2');
-                    let dealtElem3 = document.querySelector('#dealt-card-3');
-                    let dealtElem4 = document.querySelector('#dealt-card-4');
-                    // console.log(dealtElem0);
-                    dealtElem0.setAttribute('visible', false);
-                    dealtElem1.setAttribute('visible', false);
-                    dealtElem2.setAttribute('visible', false);
-                    dealtElem3.setAttribute('visible', false);
-                    dealtElem4.setAttribute('visible', false);
-                    // console.log(dealtElem0);
+                    let dealt0 = dealtElem0.components.card;
+                    let dealt1 = dealtElem1.components.card;
+                    let dealt2 = dealtElem2.components.card;
+
+                    dealt0.setCard(dealt[0][0], dealt[0][1]);
+                    dealt1.setCard(dealt[1][0], dealt[1][1]);
+                    dealt2.setCard(dealt[2][0], dealt[2][1]);
+
+                    console.log(dealtElem0);
+                    dealtElem0.setAttribute('visible', true);
+                    dealtElem1.setAttribute('visible', true);
+                    dealtElem2.setAttribute('visible', true);
+                    console.log("Flop");
                 }
+
+                else if (dealt.length == 4) {
+                    let dealtElem3 = document.querySelector('#dealt-card-3');
+                    let dealt3 = dealtElem3.components.card;
+
+                    dealt3.setCard(dealt[3][0], dealt[3][1]);
+
+                    dealtElem3.setAttribute('visible', true);
+                    console.log("Turn");
+
+                }
+
+                else if (dealt.length == 5) {
+                    let dealtElem4 = document.querySelector('#dealt-card-4');
+                    let dealt4 = dealtElem4.components.card;
+
+                    dealt4.setCard(dealt[4][0], dealt[4][1]);
+
+                    dealtElem4.setAttribute('visible', true);
+                    console.log("River");
+
+                }
+            });
+
+            poker.on('chips', function() {
+                console.log("hasChanged() - Chips has changed");
+
+                let chips = document.querySelector('#chips-' + poker.state['seat'].toString());
+                chips.components['chips'].setAmount(poker.state.players[this.data.seat].cash);
+            });
+        },
+        tick: function() {
+            if (poker.hasChanged()) {
+                console.log(poker.state);
             }
+            poker.processStateChanges();
+
+            // var seat = poker.getSeat();
+            // var hand = poker.getHand();
+            // var players = poker.getPlayers();
+            // var state = poker.getState();
+            //
+            // if (seat != null) {
+            //     console.log("Sitting down in seat #" + seat);
+            //     this.data.seat = seat;
+            //
+            //     let chair = document.querySelector('#chair-' + seat.toString()).components.seat;
+            //     chair.sitDown();
+            // }
+            //
+            // // Sent
+            // if (hand != null) {
+            //     console.log(hand);
+            //     this.card0 = document.querySelector('#card-' + this.data.seat.toString() + '-0').components.card;
+            //     this.card1 = document.querySelector('#card-' + this.data.seat.toString() + '-1').components.card;
+            //
+            //     // console.log(this.card0);
+            //     this.card0.setCard(hand[0][0] == '0' ? '10' : hand[0][0], hand[0][1]);
+            //     this.card1.setCard(hand[1][0] == '0' ? '10' : hand[1][0], hand[1][1]);
+            //     this.card0.rotate();
+            //     this.card1.rotate();
+            // }
+            //
+            // if (players != null) {
+            //     // console.log(players);
+            //     for (let playerSeat in players) {
+            //         // console.log(playerSeat);
+            //         let cardSpawn = document.querySelector('#card-spawn-' + playerSeat.toString());
+            //         let playerChips = document.querySelector('#chips-' + playerSeat.toString());
+            //         // console.log(playerChips);
+            //         if (cardSpawn != null) {
+            //             cardSpawn.setAttribute('visible', true);
+            //             playerChips.setAttribute('visible', true);
+            //         }
+            //         playerChips = document.querySelector('#chips-' + playerSeat.toString());
+            //         // console.log(playerChips);
+            //
+            //     }
+            // }
+            // console.log(poker.stateChanges);
+            // if (poker.anyStateChanges()) {
+            //     console.log("STATE HAS CHANGED!?!?!?");
+                // if(poker.hasChanged('seat')) {
+                //     console.log("hasChanged() - seat has changed");
+                // }
+                //
+                // if (poker.hasChanged('hand')) {
+                //     console.log("hasChanged() - hand has changed");
+                // }
+                //
+                // if (poker.hasChanged('players')) {
+                //     console.log("hasChanged() - players has changed");
+                // }
+            //     if (poker.hasChanged('dealt')) {
+            //         console.log("hasChanged() - dealt has changed");
+            //     }
+            // }
+            // if (state != null) {
+            //     // let dealtLength = this.dealt.length;
+            //     let chips = document.querySelector('#chips-' + this.data.seat.toString());
+            //     // console.log(state.players[this.data.seat].cash);
+            //     chips.components['chips'].setAmount(state.players[this.data.seat].cash);
+            //     if (state.dealt.length > dealtLength) {
+            //         this.dealt = state.dealt;
+            //         if (dealtLength == 0) {
+            //             let dealtElem0 = document.querySelector('#dealt-card-0');
+            //             let dealtElem1 = document.querySelector('#dealt-card-1');
+            //             let dealtElem2 = document.querySelector('#dealt-card-2');
+            //             let dealt0 = dealtElem0.components.card;
+            //             let dealt1 = dealtElem1.components.card;
+            //             let dealt2 = dealtElem2.components.card;
+            //
+            //             dealt0.setCard(this.dealt[0][0], this.dealt[0][1]);
+            //             dealt1.setCard(this.dealt[1][0], this.dealt[1][1]);
+            //             dealt2.setCard(this.dealt[2][0], this.dealt[2][1]);
+            //
+            //             console.log(dealtElem0);
+            //             dealtElem0.setAttribute('visible', true);
+            //             dealtElem1.setAttribute('visible', true);
+            //             dealtElem2.setAttribute('visible', true);
+            //             console.log("Flop");
+            //         }
+            //
+            //         else if (dealtLength == 3) {
+            //             let dealtElem3 = document.querySelector('#dealt-card-3');
+            //             let dealt3 = dealtElem3.components.card;
+            //
+            //             dealt3.setCard(this.dealt[3][0], this.dealt[3][1]);
+            //
+            //             dealtElem3.setAttribute('visible', true);
+            //             console.log("Turn");
+            //
+            //         }
+            //
+            //         else if (dealtLength == 4) {
+            //             let dealtElem4 = document.querySelector('#dealt-card-4');
+            //             let dealt4 = dealtElem4.components.card;
+            //
+            //             dealt4.setCard(this.dealt[4][0], this.dealt[4][1]);
+            //
+            //             dealtElem4.setAttribute('visible', true);
+            //             console.log("River");
+            //
+            //         }
+            //     }
+            //
+            //     else if (state.dealt.length == 0) {
+            //         this.dealt = state.dealt;
+            //         let dealtElem0 = document.querySelector('#dealt-card-0');
+            //         let dealtElem1 = document.querySelector('#dealt-card-1');
+            //         let dealtElem2 = document.querySelector('#dealt-card-2');
+            //         let dealtElem3 = document.querySelector('#dealt-card-3');
+            //         let dealtElem4 = document.querySelector('#dealt-card-4');
+            //         dealtElem0.setAttribute('visible', false);
+            //         dealtElem1.setAttribute('visible', false);
+            //         dealtElem2.setAttribute('visible', false);
+            //         dealtElem3.setAttribute('visible', false);
+            //         dealtElem4.setAttribute('visible', false);
+            //     }
+            // }
         },
         update: function() {
             // console.log("in update");
             if (this.data.seat !=  null) {
-                poker.join(100);
+                // poker.join(100);
             }
         },
         reset: function() {
@@ -720,7 +826,7 @@ window.onload = function () {
                 // console.log('clicked button');
                 // console.log(data.press.substring(1, data.press.length - 1));
                 // console.log(eval(data.press.substring(1, data.press.length - 1)));
-                console.log(eval(data.press));
+                // console.log(eval(data.press));
             });
 
             let geometry = new THREE.CylinderGeometry(1, 1, 1);
@@ -803,7 +909,7 @@ window.onload = function () {
             let el = this.el;
             buttonEl.addEventListener('click', function() {
                 let self = el.components['button-panel'];
-                console.log(self.getValue(4));
+                // console.log(self.getValue(4));
                 // console.log(el);
                 // console.log(el.components);
                 // console.log('clicked button');
@@ -812,7 +918,7 @@ window.onload = function () {
                 // console.log(document.querySelector('#controls-0').getValue(4));
                 // console.log("function was " + fn);
                 // console.log(eval('this.el.getValue(4)'));
-                console.log(fn);
+                // console.log(fn);
                 console.log(eval(fn));
             });
             this.el.appendChild(buttonEl);
@@ -873,7 +979,7 @@ window.onload = function () {
             this.el.appendChild(displayEl);
         },
         getValue(index) {
-            console.log(this.data.values);
+            // console.log(this.data.values);
             return this.data.values[index];
         }
     });
@@ -928,13 +1034,15 @@ window.onload = function () {
                 }
                 chipIndex += 1;
             }
-
-            // console.log(this.chips)
+            // console.log(this.chips);
         },
         generateChips(r, h) {
             let val = this.el.getAttribute('value');
-            console.log("generating " + val + " value of chips");
+            if (!val) return;
+
+            console.log("generating chips with value of " + val);
             for (let i = 0; i < this.objectKeys.length; i++) {
+                // console.log(this.objectKeys[i]);
                 this.el.removeObject3D(this.objectKeys[i]);
             }
 
@@ -945,28 +1053,26 @@ window.onload = function () {
             let directionIndex = 0;
             let currentPosition = {x: 0, y: 0, z: 0};
 
+            // console.log("chips: ");
+            // console.log(this.chips);
             for (let chipValue in this.chips) {
                 let chip = this.chips[chipValue];
                 // console.log(currentPosition);
-                // console.log(directionIndex);
 
                 for (let i = 0; i < chip.count; i++) {
                     let geometry = new THREE.CylinderGeometry(r, r, h);
-                    let material = new THREE.MeshBasicMaterial( {color: '#' + chip.color });
+                    let material = new THREE.MeshBasicMaterial( {color: '#' + chip.color } );
                     let chipMesh = new THREE.Mesh(geometry, material);
                     chipMesh.position.set(currentPosition.x, currentPosition.y, currentPosition.z);
-                    // console.log(currentPosition);
                     let typeText = 'chip-' + chipValue + "-" + i;
                     this.objectKeys.push(typeText);
                     this.el.setObject3D(typeText, chipMesh);
                     currentPosition.y += h;
-                    // console.log(i);
                 }
 
-
                 currentPosition.x += (0.75 * 2 * r * directions[directionIndex][0]);
-                currentPosition.z += (0.75 * 2 * r * directions[directionIndex][1]);
                 currentPosition.y = 0;
+                currentPosition.z += (0.75 * 2 * r * directions[directionIndex][1]);
 
                 shiftCount += 1;
                 if (shiftCount == shiftFactor) {
@@ -983,14 +1089,14 @@ window.onload = function () {
             }
         },
         setAmount: function(x) {
-            console.log(typeof x);
-            console.log("Set amount " + x);
             this.el.setAttribute('value', x);
-            console.log(this.el.getAttribute('value'));
+            // console.log(this.el.getAttribute('value'));
             this.loadChipDistribution();
             this.generateChips(0.1, 0.025);
         }
     });
-};
+}
+
+module.exports = Room;
 
 

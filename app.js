@@ -20,6 +20,9 @@ let express = require('express');
 let app = express();
 let server = require('http').Server(app);
 let gameServer = new (require(__dirname + '/app/server/server.js')).GameServer(server);
+let game = function(type, index) {
+    return gameServer.rooms[type + '-' + index].game;
+};
 
 app.use(express.static('public/'));
 app.use('app/', express.static('/app/clients/client.js'));

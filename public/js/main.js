@@ -1,2 +1,2 @@
-require('./room.js');
-
+let room = require('./room.js');
+room();

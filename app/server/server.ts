@@ -7,7 +7,7 @@ export class GameServer {
     private server;
     oldStage = -1;
     handSent = false;
-
+    pausedRooms = {};
     rooms = {
 
     };
@@ -38,7 +38,7 @@ export class GameServer {
         let returnData = {};
         for (let room in this.rooms) {
             if (room != 'lobby') {
-                console.log(this.rooms[room]);
+                // console.log(this.rooms[room]);
                 let game = this.rooms[room].game;
                 // console.log("playerCount: " + game.getConfig('playerCount'));
                 returnData[room] = {
@@ -75,6 +75,9 @@ export class GameServer {
         var server = this;
         var socketRoom = function(socket) {
             let keys = Object.keys(socket.rooms);
+            // console.log("socketRoom(): ");
+            // console.log(socket.rooms);
+            // console.log(keys);
             return socket.rooms[keys[1]];
         };
 
@@ -85,12 +88,12 @@ export class GameServer {
 
             socket.on('needRooms', function () {
                 console.log("Sending rooms.");
-                console.log(server.getRooms(false));
                 socket.emit('rooms',  {rooms: server.getRooms(false)});
             });
 
             socket.on('disconnecting', function() {
                 console.log('Player ' + socket.id + ' has left the room.');
+                delete server.idMap[socket.id];
                 // console.log(socket);
                 let room = server.getRoom(socketRoom(socket));
                 if (room && room.hasOwnProperty('game'))
@@ -98,10 +101,17 @@ export class GameServer {
             });
 
             socket.on('join', function(data) {
-                console.log("Player attempting to join...");
+                console.log("Player attempting to join room " + data.room + "...");
                 socket.leave('lobby');
-                socket.join(data.room);
-                let room = server.getRoom(data.room);
+                socket.join('poker-' + data.room);
+                if (socket.id in server.idMap) {
+                    console.log("Player join table failed.");
+                    socket.emit('join failed', {message: 'Join failed. Already in a table.'});
+                    return;
+                }
+
+                let room = server.getRoom('poker-' + data.room);
+                server.idMap[socket.id] = room;
                 // TODO Check database to see if player has money.
                 let availableSeat = room.game.getSeat();
 
@@ -150,18 +160,18 @@ export class GameServer {
                 let room = server.getRoom(socketRoom(socket));
 
                 let player = room.game.getPlayerByData('socketid', socket.id);
-                console.log("/////////////////////");
                 if (room.game.playerBet(player, money)) {
                     console.log("Player " + socket.id + " placed a " + parseInt(money) + " bet.");
                 } else {
                     console.log("Player " + socket.id + " tried to bet, but the command failed.");
                 }
-                console.log("/////////////////////");
 
                 // poker.dealer();
             });
 
             socket.on('call', function() {
+                console.log(socket.rooms);
+
                 let room = server.getRoom(socketRoom(socket));
 
                 let player = room.game.getPlayerByData('socketid', socket.id);
@@ -181,39 +191,70 @@ export class GameServer {
     private run() {
         let server = this;
         let rooms = this.rooms;
-
+        let pausedRooms = this.pausedRooms;
+        let pauseTime = 5000;
         var loop = function () {
             let roomKeys = Object.keys(rooms);
             for (let roomID in rooms) {
                 // console.log("\n");
                 // console.log(room);
                 // console.log(room.game);
-                if (roomID != 'lobby' && rooms[roomID] && rooms[roomID].game.inPlay()) {
-                    let room = rooms[roomID];
-                    if (server.oldStage != room.game.stage) {
-                        server.oldStage = room.game.stage;
+                let room = rooms[roomID];
 
-                        if (room.game.stage == 0) {
-                            server.handSent = false;
-                        } else if (room.game.stage == 1) {
-                            if (!server.handSent) {
-                                server.sendHands(room);
-                                server.handSent = true;
+                if (roomID != 'lobby' && room) {
+                    if (room.game.inPlay()) {
+                        if (room in pausedRooms) {
+                            // console.log("Paused Rooms: ");
+                            // console.log(pausedRooms);
+                            // console.log("Waiting to play...");
+                            let timeLeft = ((server.pausedRooms[room][0] - new Date().getTime()));
+                            if (timeLeft > 0) {
+                                // console.log('Time left is ' + timeLeft);
+                                // room.game.paused = false;
+                                // room.game.playing = true;
+                            } else {
+                                console.log("Game starting!");
+                                delete server.pausedRooms[room];
                             }
-                        } else if (room.game.stage == 2) {
-
-                        } else if (room.game.stage == 3) {
-
-                        } else if (room.game.stage == 4) {
-
-                        } else if (room.game.stage == 5) {
-
                         }
 
+                        else {
+                            // console.log('Play');
+                            if (server.oldStage != room.game.stage) {
+                                server.oldStage = room.game.stage;
+
+                                if (room.game.stage == 0) {
+                                    // server.handSent = false;
+                                } else if (room.game.stage == 1) {
+                                    // if (!server.handSent) {
+                                    //     server.sendHands(room);
+                                    //     server.handSent = true;
+                                    // }
+                                } else if (room.game.stage == 2) {
+
+                                } else if (room.game.stage == 3) {
+
+                                } else if (room.game.stage == 4) {
+
+                                } else if (room.game.stage == 5) {
+
+                                }
+
+                            }
+                        }
                     }
+
+                    else if (room.game.isBeforePlay()) {
+                        // console.log('Before Play');
+                        server.pausedRooms[room] = [new Date().getTime() + pauseTime, pauseTime];
+                        server.sendPause(room, 5);
+                        room.game.beforePlaying = false;
+                        room.game.playing = true;
+                    }
+
                     room.game.dealer();
 
-                    if (room.game.hasNewState()) {
+                    if (room.game && room.game.hasNewState()) {
                         server.sendGameStates(room);
                     }
                 }
@@ -229,9 +270,25 @@ export class GameServer {
         loop();
     }
 
-    private sendHands(room) {
+    private sendPause(room, length) {
+        console.log("Game starts in " + length + " seconds");
         for (let i = 0; i < room.game.players.length; i++) {
-            this.sendHand(room.game.players[i]);
+            let player = room.game.players[i];
+            if (player != null) {
+                let id = player.get('socketid');
+                this.io.to(id).emit('pause', {length: length});
+            }
+        }
+    }
+
+    private sendHands(room) {
+        // console.log(room);
+        let players = room.game.players;
+        for (let i = 0; i < players.length; i++) {
+            // this.sendHand(room.game.players[i]);
+            if (players[i] != null) {
+                // room.game.updateState('hand', players[i].hand.getCardsArray());
+            }
         }
 
         this.handSent = true;
@@ -241,20 +298,27 @@ export class GameServer {
         if (player != null) {
             let id = player.get('socketid');
             this.io.to(id).emit('hand', {hand: player.hand.getCardsArray()});
+
             console.log("Hand (" + player.hand.getCardsArray().toString() + ") sent to player " + id);
         }
     }
 
     private sendGameStates(room) {
+        let stateChanges = room.game.getStateChanges();
         let state = room.game.getState();
         // console.log(poker.stateChanged);
         for (let i = 0; i < room.game.players.length; i++) {
             let player = room.game.players[i];
             if (player != null) {
+                let tempStateChanges = stateChanges.slice();
+                if (room.game.stage == 1) {
+                    // tempStateChanges.push(['seat', i]);
+                    tempStateChanges.push(['hand', player.getHand().getCardsArray()]);
+                }
                 let id = player.get('socketid');
-                this.io.to(id).emit('gameState', {state: state});
+                // this.io.to(id).emit('newState', {state: state});
+                this.io.to(id).emit('updateState', {changes: tempStateChanges});
             }
         }
-        console.log(room.game.stateChanged);
     }
 }

@@ -229,14 +229,45 @@ export class Poker extends Game {
     private deck: Deck = new Deck();
     private dealt: Cards  = new Cards();
     private stage: number = 0;
+    private lastStage: number = 0;
     private totalPot = 0;
-
+    private beforePlaying = false;
+    private beforePaused = false;
     private playing = false;
+    private paused = false;
     private currentPlayerIndex = 0;
     private stageInitialized = false;
     private forceNextStage = false;
     private playerCount = 0;
+    private ons = {
+        'beforePaused': function() {
 
+        },
+        'beforePlay': function() {
+
+        },
+        'paused': function() {
+
+        },
+        'play': function () {
+            
+        }
+    };
+    // if (this.isBeforePaused()) {
+    //     this.ons['beforePaused']();
+    // }
+    //
+    // else if (this.isBeforePlay()) {
+    //     this.ons['beforePlay']();
+    // }
+    //
+    // else if (this.isPaused()) {
+    //     this.ons['paused']();
+    // }
+    //
+    // else if (this.inPlay()) {
+    //     this.ons['play']();
+    // }
     constructor(config = null) {
         super();
         this.setConfig(config);
@@ -254,9 +285,11 @@ export class Poker extends Game {
             dealt: [],
             stage: 0
         };
+
+        // this.paused = true;
    }
 
-   getConfig(name) {
+    getConfig(name) {
         if (!name) {
             return this.config;
         }
@@ -265,7 +298,7 @@ export class Poker extends Game {
         }
    }
 
-   getPlayerCount() {
+    getPlayerCount() {
        return this.playerCount;
    }
 
@@ -306,8 +339,25 @@ export class Poker extends Game {
         }
     }
 
+    inTable(playerID) {
+        console.log(playerID);
+        for (let pid in this.players) {
+            if (pid != null) {
+                let player = this.players[pid];
+
+                if(player) {
+                    if (player.get('socketid') == playerID) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     addPlayer(seatNumber, data): boolean {
-        if (this.players[seatNumber] != null) {
+        if (this.players[seatNumber] != null || this.inTable(data['socketid'])) {
             return false;
         }
 
@@ -320,19 +370,16 @@ export class Poker extends Game {
         this.players[seatNumber].set("seatNumber", seatNumber);
 
         // Update state
-        this.updateState('players.' + seatNumber.toString(), {});
+        // this.updateState('players.' + seatNumber.toString(), {});
+        this.updateState('seat', seatNumber);
         this.playerCount += 1;
+        this.players[seatNumber].sitToggle();
         return true;
-    }
-
-    updateState(key, value) {
-        this.state['dealt'] = this.dealt.getCardsArray();
-        super.updateState(key, value);
     }
 
     removePlayer(player): boolean {
         if (player == null) {
-            console.log("No player to remove");
+            // console.log("No player to remove");
             return false;
         }
 
@@ -352,6 +399,7 @@ export class Poker extends Game {
 
     resetGame() {
         this.stage = 0;
+        this.lastStage = 5;
         this.playing = false;
         for (let i = 0; i < this.players.length; i++) {
             if (this.players[i] != null) this.players[i].reset(this.deck);
@@ -403,41 +451,131 @@ export class Poker extends Game {
         return this.players[this.currentPlayerIndex];
     }
 
+    on(stateChange, fn) {
+        this.ons[stateChange] = fn;
+    }
+
+    processStateChanges() {
+        for (let i = 0; i < this.stateChanges.length; i++) {
+            let change = this.stateChanges[i][0];
+            if (this.isBeforePaused()) {
+                this.ons['beforePaused']();
+            }
+
+            else if (this.isBeforePlay()) {
+                this.ons['beforePlay']();
+            }
+
+            else if (this.isPaused()) {
+                this.ons['paused']();
+            }
+
+            else if (this.inPlay()) {
+                this.ons['play']();
+            }
+            else if (change in this.ons) {
+                this.ons[change]();
+            }
+
+        }
+
+        this.stateChanges = [];
+    }
+
+    // loop () {
+    //     if (this.inPlay()) {
+    //         if (server.oldStage != this.stage) {
+    //             server.oldStage = this.stage;
+    //
+    //             if (this.stage == 0) {
+    //                 server.handSent = false;
+    //             } else if (this.stage == 1) {
+    //                 if (!server.handSent) {
+    //                     server.sendHands(room);
+    //                     server.handSent = true;
+    //                 }
+    //             } else if (this.stage == 2) {
+    //
+    //             } else if (this.stage == 3) {
+    //
+    //             } else if (this.stage == 4) {
+    //
+    //             } else if (this.stage == 5) {
+    //
+    //             }
+    //
+    //         }
+    //
+    //         this.dealer();
+    //     }
+    //
+    //     else if (this.isBeforePlay()) {
+    //
+    //     }
+    //
+    //     else if (this.isPaused()) {
+    //         server.pausedRooms.push([room, new Date().getTime(), 5]);
+    //         server.sendPause(room, 5);
+    //     }
+    //
+    //     else if (this.isBeforePaused()) {
+    //
+    //     }
+    //
+    //
+    // }
+
+    sendHands() {
+
+    }
+
     dealer(): boolean {
         if (!this.tableHasTwo()) {
             this.stage = 0;
-            this.playing = false;
-            if (this.playing) this.updateState('playing', false);
             return false;
-        } else {
-            if (!this.playing) this.updateState('playing', true);
+        }
 
-            this.playing = true;
+        else {
+            if (this.beforePlaying) {
 
-            if (!this.stageInitialized) {
-                this.initStage();
             }
 
-            else if (this.forceNextStage) {
-                this.forceNextStage = false;
-                this.currentPlayerIndex = 0;
-                this.nextStage();
+            else if (!this.playing) {
+                this.beforePlaying = true;
             }
 
-            else if (this.currentPlayer().isDone()) {
-                if (this.allDone()) {
-                    this.nextStage();
-                } else {
-                    this.nextPlayer();
+            else {
+                if (!this.stageInitialized) {
+                    this.initStage();
                 }
+
+                else if (this.forceNextStage) {
+                    this.forceNextStage = false;
+                    this.currentPlayerIndex = 0;
+                    this.nextStage();
+                }
+
+                else if (this.currentPlayer().isDone()) {
+                    if (this.allDone()) {
+                        this.nextStage();
+                    } else {
+                        let oldIndex = this.currentPlayerIndex;
+                        this.nextPlayer();
+                        if (this.currentPlayerIndex == oldIndex) {
+                            this.forceNextStage = true;
+                        }
+
+                    }
+                }
+
+                return true;
             }
 
-            return true;
         }
     }
 
     initStage() {
-        console.log("\nInitializing stage...");
+        // console.log("\nInitializing stage...");
         switch (this.stage) {
             case 0:
                 this.dealStage();
@@ -478,15 +616,15 @@ export class Poker extends Game {
     nextPlayer() {
         if (this.tableEmpty()) return;
 
-        let index = this.currentPlayerIndex;
-        do {
-            if (this.players[++index] != null) {
-                this.currentPlayerIndex = index;
-                return;
-            }
+        let index = this.currentPlayerIndex + 1;
+        while (!this.players[index] || this.players[index].folded) {
+            if (index > this.players.length)
+                index = 0;
 
-            if (index > this.players.length) index = 0;
-        } while (1);
+            index += 1;
+        }
+
+        this.currentPlayerIndex = index;
 
         console.log("Player " + this.currentPlayerIndex + " Turn");
     }
@@ -520,9 +658,18 @@ export class Poker extends Game {
     }
 
     inPlay() {
-        if (this.tableHasTwo()) return true;
+        return this.playing;
+    }
 
-        return false;
+    isBeforePlay() {
+        return this.beforePlaying;
+    }
+    isPaused() {
+        return this.paused;
+    }
+
+    isBeforePaused() {
+        return this.beforePaused;
     }
 
     getSeat(seat = null): number {
@@ -577,7 +724,7 @@ export class Poker extends Game {
     }
 
     private dealStage(): void {
-        console.log("Game is in the Deal Stage (0)");
+        // console.log("Game is in the Deal Stage (0)");
 
         while (!this.dealt.empty()) {
             this.deck.add(this.dealt.pop());
@@ -592,39 +739,49 @@ export class Poker extends Game {
 
         this.resetAllPlayers();
 
-
         this.deck.shuffle();
 
         // Deal players cards
-        for (let player of this.players) {
+        for (let i = 0; i < this.players.length; i++) {
+            let player = this.players[i];
             if (player != null) {
+
                 this.dealPlayer(player);
             }
+
         }
 
         this.forceNextStage = true;
     }
 
-    private preFlop(): void {
-        console.log("Game is in the Pre Flop Stage (1)");
-        // Add dealt cards back to the deck
+    public getState() {
 
+        return super.getState();
+    }
+
+    private preFlop(): void {
+        // console.log("Game is in the Pre Flop Stage (1)");
+        // Add dealt cards back to the deck
+        this.updateState('dealt', this.dealt.getCardsArray());
     }
 
     private flop(): void {
-        console.log("Game is in the Flop Stage (2)");
+        // console.log("Game is in the Flop Stage (2)");
         for (let i = 0; i < 3; i++) {
             this.dealt.add(this.deck.pop());
         }
+
+        this.updateState('dealt', this.dealt.getCardsArray());
     }
 
     private turnRiver(): void {
-        if (this.stage == 3)
-            console.log("Game is in the Turn Stage (3)");
-        else
-            console.log("Game is in the River Stage (4)");
+        // if (this.stage == 3)
+        //     console.log("Game is in the Turn Stage (3)");
+        // else
+        //     console.log("Game is in the River Stage (4)");
 
         this.dealt.add(this.deck.pop());
+        this.updateState('dealt', this.dealt.getCardsArray());
     }
 
     private resetAllPlayers() {

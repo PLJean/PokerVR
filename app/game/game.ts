@@ -5,6 +5,7 @@ export class Player {
     hand: Cards = new Cards();
     betAmount: number = 0;
     folded: boolean = true;
+    seated: boolean = false;
     playerInfo = {
         'socketid': null
     };
@@ -14,6 +15,19 @@ export class Player {
         action: [null, null],
         cash: 0,
     };
+
+    private personalState = {
+        hand: []
+    };
+
+    public sitToggle() {
+        this.seated = !this.seated;
+    }
+
+    public isSeated() {
+        return this.seated;
+    }
+      
 
     public stateHasChanged = true;
 
@@ -67,7 +81,6 @@ export class Player {
 
     resetTurn() {
         this.betAmount = 0;
-        this.folded = false;
         this.state.action = null;
         this.stateHasChanged = true;
     }
@@ -98,6 +111,10 @@ export class Player {
         return this.state;
     }
 
+    getPersonalState() {
+
+    }
+
     addMoney(money) {
         this.cash += money;
     }
@@ -107,17 +124,24 @@ export class Game {
     protected players: Player[] = [];
     protected state = {};
     protected stateChanged: boolean = false;
+    protected stateChanges = [];
 
     public getState() {
+
         for (let i = 0; i < this.players.length; i++) {
             if (this.players[i] != null && this.players[i].stateHasChanged) {
                 this.updateState('players.' + i, this.players[i].getState());
             }
         }
 
+        this.stateChanges = [];
         this.stateChanged = false;
 
         return this.state;
+    }
+
+    public getStateChanges() {
+        return this.stateChanges;
     }
 
     public hasNewState() {
@@ -130,21 +154,20 @@ export class Game {
         let keys = key.split('.');
         if (keys.length != 0) {
             let object = this.state;
-            for (let i = 0; i < keys.length - 1; i++) {
-                object = object[keys[i]];
-            }
+            for (let i = 0; i < keys.length; i++) {
+                if (i == keys.length - 1) {
+                    object[keys[i]] = value;
+                }
 
-            if (value != null) {
-                object[keys[keys.length - 1]] = value;
-            } else {
-                delete object[keys[keys.length - 1]];
+                else if (object[keys[i]] == null) {
+                    object[keys[i]] = {};
+                }
+
+                object = object[keys[i]];
             }
         }
 
+        this.stateChanges.push([key, value]);
         this.stateChanged = true;
-    }
-
-    public apply(method, args) {
-        console.log(this);
     }
 }
