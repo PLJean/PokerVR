@@ -7,7 +7,7 @@ export class Player {
     folded: boolean = true;
     seated: boolean = false;
     playerInfo = {
-        'socketid': null
+        'socketid': null,
     };
 
     private state = {
@@ -20,6 +20,10 @@ export class Player {
         hand: []
     };
 
+    constructor(money) {
+        this.cash = money;
+    }
+
     public sitToggle() {
         this.seated = !this.seated;
     }
@@ -31,17 +35,18 @@ export class Player {
 
     public stateHasChanged = true;
 
-    constructor(money) {
-        this.cash = money;
-    }
-
-    call() {
+    call(amount) {
+        if (amount) {
+            this.betAmount += amount;
+            this.cash -= amount;
+        }
         this.state.action = [1, null];
         this.stateHasChanged = true;
     }
 
     bet(amount) {
         this.betAmount += amount;
+        this.cash -= amount;
         this.state.action =  [2, amount];
         this.stateHasChanged = true;
     }
@@ -80,7 +85,6 @@ export class Player {
     }
 
     resetTurn() {
-        this.betAmount = 0;
         this.state.action = null;
         this.stateHasChanged = true;
     }
@@ -104,9 +108,10 @@ export class Player {
     }
 
     getState() {
-        console.log(this.cash);
-        this.state.cash = this.cash;
-        console.log(this.state);
+        // console.log(this.cash);
+        this.state['cash'] = this.cash;
+        this.state['minimumBet'] = this.playerInfo['minimumBet'];
+        // console.log(this.state);
         this.stateHasChanged = false;
         return this.state;
     }

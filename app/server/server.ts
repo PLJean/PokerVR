@@ -8,6 +8,7 @@ export class GameServer {
     oldStage = -1;
     handSent = false;
     pausedRooms = {};
+    sitters = {};
     rooms = {
 
     };
@@ -122,7 +123,8 @@ export class GameServer {
                     };
                     if (room.game.addPlayer(availableSeat, playerData)) {
                         console.log("Player joined table. ");
-                        socket.emit('beSeated', {seatNumber: availableSeat})
+                        server.sitters[availableSeat] = true;
+                        // socket.emit('beSeated', {seatNumber: availableSeat})
 
                     } else {
                         console.log("Player join table failed.");
@@ -170,8 +172,6 @@ export class GameServer {
             });
 
             socket.on('call', function() {
-                console.log(socket.rooms);
-
                 let room = server.getRoom(socketRoom(socket));
 
                 let player = room.game.getPlayerByData('socketid', socket.id);
@@ -196,22 +196,13 @@ export class GameServer {
         var loop = function () {
             let roomKeys = Object.keys(rooms);
             for (let roomID in rooms) {
-                // console.log("\n");
-                // console.log(room);
-                // console.log(room.game);
                 let room = rooms[roomID];
 
                 if (roomID != 'lobby' && room) {
                     if (room.game.inPlay()) {
                         if (room in pausedRooms) {
-                            // console.log("Paused Rooms: ");
-                            // console.log(pausedRooms);
-                            // console.log("Waiting to play...");
                             let timeLeft = ((server.pausedRooms[room][0] - new Date().getTime()));
                             if (timeLeft > 0) {
-                                // console.log('Time left is ' + timeLeft);
-                                // room.game.paused = false;
-                                // room.game.playing = true;
                             } else {
                                 console.log("Game starting!");
                                 delete server.pausedRooms[room];
@@ -223,22 +214,19 @@ export class GameServer {
                             if (server.oldStage != room.game.stage) {
                                 server.oldStage = room.game.stage;
 
-                                if (room.game.stage == 0) {
-                                    // server.handSent = false;
-                                } else if (room.game.stage == 1) {
-                                    // if (!server.handSent) {
-                                    //     server.sendHands(room);
-                                    //     server.handSent = true;
-                                    // }
-                                } else if (room.game.stage == 2) {
-
-                                } else if (room.game.stage == 3) {
-
-                                } else if (room.game.stage == 4) {
-
-                                } else if (room.game.stage == 5) {
-
-                                }
+                                // if (room.game.stage == 0) {
+                                //
+                                // } else if (room.game.stage == 1) {
+                                //
+                                // } else if (room.game.stage == 2) {
+                                //
+                                // } else if (room.game.stage == 3) {
+                                //
+                                // } else if (room.game.stage == 4) {
+                                //
+                                // } else if (room.game.stage == 5) {
+                                //
+                                // }
 
                             }
                         }
@@ -305,14 +293,20 @@ export class GameServer {
 
     private sendGameStates(room) {
         let stateChanges = room.game.getStateChanges();
-        let state = room.game.getState();
+        let state = room.game.getState(); // TODO Remove this. Can't now because it updates player state...
         // console.log(poker.stateChanged);
         for (let i = 0; i < room.game.players.length; i++) {
             let player = room.game.players[i];
             if (player != null) {
                 let tempStateChanges = stateChanges.slice();
+                // if (room.game.isBeforePlay()) {
+                //     tempStateChanges.push(['seat', i]);
+                // }
+                if (i in this.sitters) {
+                    tempStateChanges.push(['seat', i]);
+                    delete this.sitters[i];
+                }
                 if (room.game.stage == 1) {
-                    // tempStateChanges.push(['seat', i]);
                     tempStateChanges.push(['hand', player.getHand().getCardsArray()]);
                 }
                 let id = player.get('socketid');

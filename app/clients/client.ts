@@ -17,9 +17,9 @@ export class Client {
 
         this.socket.on('updateState', function(data) {
             console.log("Updating State....");
-            console.log(data.changes);
+            // TODO Make stateChanges a Set so there is no overlap when processingStateChanges
+            self.stateChanges = self.stateChanges.concat(data.changes);
             self.updateStates(data.changes);
-            self.stateChanges = data.changes;
         });
     }
 
@@ -28,7 +28,6 @@ export class Client {
     }
 
     public updateStates(changes) {
-        console.log(changes);
         for (let i = 0; i < changes.length;  i++) {
             this.updateState(changes[i][0], changes[i][1]);
         }
@@ -59,7 +58,7 @@ export class Client {
         // console.log("\n");
 
         this.stateChanged = true;
-        console.log(this.stateChanges);
+        // console.log(this.stateChanges);
     }
 
     public getState() {
@@ -81,12 +80,13 @@ export class Client {
     public processStateChanges() {
         for (let i = 0; i < this.stateChanges.length; i++) {
             let change = this.stateChanges[i][0];
+            // console.log('--------------------');
             // console.log('change: ' + change);
-            var onsList = Object.keys(this.ons);
+            let onsList = Object.keys(this.ons);
 
             for (let j = 0; j < onsList.length; j++) {
                 // console.log(onsList[j]);
-                let patt = new RegExp(onsList[j]);
+                let patt = new RegExp('^' + onsList[j] + '$');
                 // console.log(patt);
                 let res = patt.exec(change);
                 if (res) {
@@ -95,8 +95,7 @@ export class Client {
                     break;
                 }
             }
-
-            // console.log("\n");
+            // console.log('--------------------\n');
             // if (change in this.ons) {
             //     // console.log("in");
             //     this.ons[change]();
@@ -129,7 +128,9 @@ export class PokerClient extends Client {
         });
 
         this.socket.on('beSeated', function(data) {
-            client.setSeat(data['seatNumber']);
+            let seatNumber = data['seatNumber'];
+            client.setSeat(seatNumber);
+            // client.setBetMin((data['players'][seatNumber]['minimumBet'])
         });
 
         this.socket.on('rooms', function(data) {
@@ -156,6 +157,10 @@ export class PokerClient extends Client {
         this.rooms = rooms;
     }
 
+    public setBetMin(min) {
+
+    }
+
     public join(amount, roomID) {
         console.log("Joining table.");
         this.socket.emit('join', {money: amount, room: roomID});
@@ -179,6 +184,10 @@ export class PokerClient extends Client {
     public call() {
         console.log("Call");
         this.socket.emit('call');
+    }
+
+    public getBetRange() {
+
     }
 
     public getRooms() {

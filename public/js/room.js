@@ -79,7 +79,6 @@ function Room () {
             console.log("Sitting down at seat #" + this.data);
             let position = this.el.getAttribute('position');
             let rotation = this.el.getAttribute('rotation');
-            console.log("player: " + player);
             let playerHeight = player.getAttribute('position').y;
             let dealtCards = document.querySelector('#dealt-cards');
             let controls = document.querySelector('#controls-' + this.data);
@@ -163,9 +162,7 @@ function Room () {
             this.back.material.map.needsUpdate = true;
         },
         generateFrontImage: function() {
-            // console.log("in");
             if (this.data.suit != '' && this.data.symbol != '') {
-                // console.log("generating card image");
                 var canvas = document.createElement('canvas');
                 canvas.width = 250;
                 canvas.height = 350;
@@ -235,9 +232,7 @@ function Room () {
         },
         rotate: function () {
             var lastRotation = this.el.getAttribute('rotation');
-            // console.log(lastRotation);
             this.el.setAttribute('rotation', new THREE.Vector3(0, 0, 0));
-            // console.log(this.el.getAttribute('rotation'));
         },
         unrotate: function() {
             var lastRotation = this.el.getAttribute('rotation');
@@ -267,7 +262,6 @@ function Room () {
 
             let self = this;
             this.el.addEventListener('raycaster-intersected', function (event) {
-                // console.log(event);
                 let intersection = event.detail.intersection;
                 for (let i = 0; i < 5; i++) {
                     if (intersection.object == self.el.getObject3D('row-' + i)) {
@@ -275,17 +269,11 @@ function Room () {
                         break;
                     }
                 }
-                // for (let i = 0; i < intersections.length; i++) {
-                //     let intersect = intersections[i];
-                //     console.log(intersect.object);
-                // }
             });
 
             this.el.addEventListener('click', function(event) {
-                console.log('clicked');
                 let roomIndex = self.data.page * self.data.perPage + self.highlighted;
                 if (self.highlighted != null) {
-                    console.log("highlighted: " + self.highlighted);
                     poker.join(100, roomIndex)
                 }
             });
@@ -304,17 +292,11 @@ function Room () {
                 this.el.setAttribute('visible', true);
                 this.updateRoomList(rooms);
             }
-            // console.log(cursor);
-            // this.raycaster.setFromCamera(cursor.getObject3D, camera);
-
-            // var intersects = this.raycaster.intersectObjects( this.el.getObject3D('row-0') );
-            // console.log(intersects);
         },
         requestRoomsList: function () {
             poker.requestRooms();
         },
         updateRoomList: function(rooms) {
-            // console.log("generating card image");
             let roomKeys;
             if (rooms) {
                 roomKeys = Object.keys(rooms);
@@ -350,7 +332,6 @@ function Room () {
                     ctx.fillText(room['playerCount'] + '/' + room['maxPlayerCount'] + ' Players', 50, 64);
                     ctx.fillText(room['type'],400 , 64);
                     ctx.fillText(room['minimum'] + '-' + room['maximum'] + ' Buy In', 700, 64);
-                    // console.log(this.rows[i].material.map);
                     row.material.map = new THREE.Texture(canvas);
                     row.material.map.needsUpdate = true;
                 } else {
@@ -392,7 +373,6 @@ function Room () {
                 ctx.fillText(room['playerCount'] + '/' + room['maxPlayerCount'] + ' Players', 50, 64);
                 ctx.fillText(room['type'],400 , 64);
                 ctx.fillText(room['minimum'] + '-' + room['maximum'] + ' Buy In', 700, 64);
-                // console.log(this.rows[i].material.map);
                 row.material.map = new THREE.Texture(canvas);
                 row.material.map.needsUpdate = true;
                 this.highlighted = i;
@@ -457,8 +437,6 @@ function Room () {
                 else if (scale == null) {
                     scale = {x: 1, y: 1, z: 1};
                 }
-                // console.log("scale ", scale);
-                // console.log("currentscale ", currentScale);
 
                 currentScale.x = currentScale.x / scale.x;
                 currentScale.y = currentScale.y / scale.y;
@@ -471,8 +449,6 @@ function Room () {
             if (sceneScale == null) sceneScale = {x: 1, y: 1, z: 1};
             var newScale = {x: sceneScale.x * currentScale.x, y: sceneScale.y * currentScale.y, z: sceneScale.z * currentScale.z};
             this.el.setAttribute('scale', newScale);
-
-            // console.log("scale ", this.el.getAttribute('scale'));
         },
         update: function () {
             this.setWorldScale();
@@ -487,9 +463,8 @@ function Room () {
         card1: null,
         dealt: [],
         init: function() {
-            // console.log("init");
             let dealer = this;
-            poker.on('players', function() {
+            poker.on('players\.\\d+', function() {
                 let players = poker.state['players'];
                 for (let playerSeat in players) {
                     // console.log(playerSeat);
@@ -498,11 +473,11 @@ function Room () {
                     let playerChips = document.querySelector('#chips-' + playerSeat.toString());
                     // console.log(playerChips);
                     if (cardSpawn) {
+                        playerChips.components['chips'].setAmount(poker.state.players[dealer.data.seat].cash);
                         cardSpawn.setAttribute('visible', true);
                         playerChips.setAttribute('visible', true);
                     }
                     playerChips = document.querySelector('#chips-' + playerSeat.toString());
-                    // console.log(playerChips);
 
                 }
             });
@@ -590,149 +565,15 @@ function Room () {
 
                 }
             });
-
-            poker.on('chips', function() {
-                console.log("hasChanged() - Chips has changed");
-
-                let chips = document.querySelector('#chips-' + poker.state['seat'].toString());
-                chips.components['chips'].setAmount(poker.state.players[this.data.seat].cash);
-            });
         },
         tick: function() {
             if (poker.hasChanged()) {
                 console.log(poker.state);
             }
             poker.processStateChanges();
-
-            // var seat = poker.getSeat();
-            // var hand = poker.getHand();
-            // var players = poker.getPlayers();
-            // var state = poker.getState();
-            //
-            // if (seat != null) {
-            //     console.log("Sitting down in seat #" + seat);
-            //     this.data.seat = seat;
-            //
-            //     let chair = document.querySelector('#chair-' + seat.toString()).components.seat;
-            //     chair.sitDown();
-            // }
-            //
-            // // Sent
-            // if (hand != null) {
-            //     console.log(hand);
-            //     this.card0 = document.querySelector('#card-' + this.data.seat.toString() + '-0').components.card;
-            //     this.card1 = document.querySelector('#card-' + this.data.seat.toString() + '-1').components.card;
-            //
-            //     // console.log(this.card0);
-            //     this.card0.setCard(hand[0][0] == '0' ? '10' : hand[0][0], hand[0][1]);
-            //     this.card1.setCard(hand[1][0] == '0' ? '10' : hand[1][0], hand[1][1]);
-            //     this.card0.rotate();
-            //     this.card1.rotate();
-            // }
-            //
-            // if (players != null) {
-            //     // console.log(players);
-            //     for (let playerSeat in players) {
-            //         // console.log(playerSeat);
-            //         let cardSpawn = document.querySelector('#card-spawn-' + playerSeat.toString());
-            //         let playerChips = document.querySelector('#chips-' + playerSeat.toString());
-            //         // console.log(playerChips);
-            //         if (cardSpawn != null) {
-            //             cardSpawn.setAttribute('visible', true);
-            //             playerChips.setAttribute('visible', true);
-            //         }
-            //         playerChips = document.querySelector('#chips-' + playerSeat.toString());
-            //         // console.log(playerChips);
-            //
-            //     }
-            // }
-            // console.log(poker.stateChanges);
-            // if (poker.anyStateChanges()) {
-            //     console.log("STATE HAS CHANGED!?!?!?");
-                // if(poker.hasChanged('seat')) {
-                //     console.log("hasChanged() - seat has changed");
-                // }
-                //
-                // if (poker.hasChanged('hand')) {
-                //     console.log("hasChanged() - hand has changed");
-                // }
-                //
-                // if (poker.hasChanged('players')) {
-                //     console.log("hasChanged() - players has changed");
-                // }
-            //     if (poker.hasChanged('dealt')) {
-            //         console.log("hasChanged() - dealt has changed");
-            //     }
-            // }
-            // if (state != null) {
-            //     // let dealtLength = this.dealt.length;
-            //     let chips = document.querySelector('#chips-' + this.data.seat.toString());
-            //     // console.log(state.players[this.data.seat].cash);
-            //     chips.components['chips'].setAmount(state.players[this.data.seat].cash);
-            //     if (state.dealt.length > dealtLength) {
-            //         this.dealt = state.dealt;
-            //         if (dealtLength == 0) {
-            //             let dealtElem0 = document.querySelector('#dealt-card-0');
-            //             let dealtElem1 = document.querySelector('#dealt-card-1');
-            //             let dealtElem2 = document.querySelector('#dealt-card-2');
-            //             let dealt0 = dealtElem0.components.card;
-            //             let dealt1 = dealtElem1.components.card;
-            //             let dealt2 = dealtElem2.components.card;
-            //
-            //             dealt0.setCard(this.dealt[0][0], this.dealt[0][1]);
-            //             dealt1.setCard(this.dealt[1][0], this.dealt[1][1]);
-            //             dealt2.setCard(this.dealt[2][0], this.dealt[2][1]);
-            //
-            //             console.log(dealtElem0);
-            //             dealtElem0.setAttribute('visible', true);
-            //             dealtElem1.setAttribute('visible', true);
-            //             dealtElem2.setAttribute('visible', true);
-            //             console.log("Flop");
-            //         }
-            //
-            //         else if (dealtLength == 3) {
-            //             let dealtElem3 = document.querySelector('#dealt-card-3');
-            //             let dealt3 = dealtElem3.components.card;
-            //
-            //             dealt3.setCard(this.dealt[3][0], this.dealt[3][1]);
-            //
-            //             dealtElem3.setAttribute('visible', true);
-            //             console.log("Turn");
-            //
-            //         }
-            //
-            //         else if (dealtLength == 4) {
-            //             let dealtElem4 = document.querySelector('#dealt-card-4');
-            //             let dealt4 = dealtElem4.components.card;
-            //
-            //             dealt4.setCard(this.dealt[4][0], this.dealt[4][1]);
-            //
-            //             dealtElem4.setAttribute('visible', true);
-            //             console.log("River");
-            //
-            //         }
-            //     }
-            //
-            //     else if (state.dealt.length == 0) {
-            //         this.dealt = state.dealt;
-            //         let dealtElem0 = document.querySelector('#dealt-card-0');
-            //         let dealtElem1 = document.querySelector('#dealt-card-1');
-            //         let dealtElem2 = document.querySelector('#dealt-card-2');
-            //         let dealtElem3 = document.querySelector('#dealt-card-3');
-            //         let dealtElem4 = document.querySelector('#dealt-card-4');
-            //         dealtElem0.setAttribute('visible', false);
-            //         dealtElem1.setAttribute('visible', false);
-            //         dealtElem2.setAttribute('visible', false);
-            //         dealtElem3.setAttribute('visible', false);
-            //         dealtElem4.setAttribute('visible', false);
-            //     }
-            // }
         },
         update: function() {
-            // console.log("in update");
-            if (this.data.seat !=  null) {
-                // poker.join(100);
-            }
+
         },
         reset: function() {
             this.card0 = null;
@@ -919,19 +760,9 @@ function Room () {
                 align: 'center',
                 value: text
             });
-            let el = this.el;
+
+            let self = this;
             buttonEl.addEventListener('click', function() {
-                let self = el.components['button-panel'];
-                // console.log(self.getValue(4));
-                // console.log(el);
-                // console.log(el.components);
-                // console.log('clicked button');
-                // console.log(data.press.substring(1, data.press.length - 1));
-                // console.log(eval(data.press.substring(1, data.press.length - 1)));
-                // console.log(document.querySelector('#controls-0').getValue(4));
-                // console.log("function was " + fn);
-                // console.log(eval('this.el.getValue(4)'));
-                // console.log(fn);
                 console.log(eval(fn));
             });
             this.el.appendChild(buttonEl);
@@ -992,7 +823,6 @@ function Room () {
             this.el.appendChild(displayEl);
         },
         getValue(index) {
-            // console.log(this.data.values);
             return this.data.values[index];
         }
     });
@@ -1018,11 +848,9 @@ function Room () {
         },
         objectKeys: [],
         init: function() {
-            this.loadChipDistribution();
             this.generateChips(0.1, 0.025);
         },
         update: function() {
-            this.loadChipDistribution();
             this.generateChips(0.1, 0.025);
         },
         loadChipDistribution: function() {
@@ -1033,6 +861,7 @@ function Room () {
 
             while (amountLeft > 0) {
                 let chip = chipValues[chipIndex];
+                this.chips[chip].count = 0;
                 for (let i = 0; i < chipCount; i++) {
                     let newAmount = amountLeft - chip;
                     if (newAmount < 0) {
@@ -1043,19 +872,21 @@ function Room () {
                         amountLeft = newAmount;
                         if (amountLeft == 0) break;
                     }
-                    // console.log(i + " " + this.chips[chip].color);
                 }
                 chipIndex += 1;
             }
-            // console.log(this.chips);
+
         },
         generateChips(r, h) {
             let val = this.el.getAttribute('value');
             if (!val) return;
 
+            this.loadChipDistribution();
+
             console.log("generating chips with value of " + val);
+            console.log('this.objectKeys.length: ' + this.objectKeys.length);
             for (let i = 0; i < this.objectKeys.length; i++) {
-                // console.log(this.objectKeys[i]);
+                console.log(this.objectKeys[i]);
                 this.el.removeObject3D(this.objectKeys[i]);
             }
 
@@ -1066,11 +897,8 @@ function Room () {
             let directionIndex = 0;
             let currentPosition = {x: 0, y: 0, z: 0};
 
-            // console.log("chips: ");
-            // console.log(this.chips);
             for (let chipValue in this.chips) {
                 let chip = this.chips[chipValue];
-                // console.log(currentPosition);
 
                 for (let i = 0; i < chip.count; i++) {
                     let geometry = new THREE.CylinderGeometry(r, r, h);
@@ -1103,8 +931,6 @@ function Room () {
         },
         setAmount: function(x) {
             this.el.setAttribute('value', x);
-            // console.log(this.el.getAttribute('value'));
-            this.loadChipDistribution();
             this.generateChips(0.1, 0.025);
         }
     });

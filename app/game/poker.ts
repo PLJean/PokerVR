@@ -226,11 +226,13 @@ export class Poker extends Game {
         type: 'No Limit' // Pot, Fixed, or No Limit
     };
 
+    private defaultMinimumBet: number = 2;
+    private minimumBet: number;
     private deck: Deck = new Deck();
     private dealt: Cards  = new Cards();
     private stage: number = 0;
     private lastStage: number = 0;
-    private totalPot = 0;
+    private pots = {main: 0};
     private beforePlaying = false;
     private beforePaused = false;
     private playing = false;
@@ -253,21 +255,7 @@ export class Poker extends Game {
             
         }
     };
-    // if (this.isBeforePaused()) {
-    //     this.ons['beforePaused']();
-    // }
-    //
-    // else if (this.isBeforePlay()) {
-    //     this.ons['beforePlay']();
-    // }
-    //
-    // else if (this.isPaused()) {
-    //     this.ons['paused']();
-    // }
-    //
-    // else if (this.inPlay()) {
-    //     this.ons['play']();
-    // }
+
     constructor(config = null) {
         super();
         this.setConfig(config);
@@ -286,7 +274,8 @@ export class Poker extends Game {
             stage: 0
         };
 
-        // this.paused = true;
+        this.defaultMinimumBet = Math.trunc(this.config.minimum / 10);
+        this.minimumBet = this.defaultMinimumBet;
    }
 
     getConfig(name) {
@@ -303,9 +292,13 @@ export class Poker extends Game {
    }
 
     playerBet(player, amount) {
-        // console.log(player == this.currentPlayer());
-        // console.log(this.canBet(player, amount));
         if (player == this.currentPlayer() && this.canBet(player, amount)) {
+            console.log("amount: " + amount);
+            console.log("minimumBet: " + this.minimumBet);
+            if (amount > this.minimumBet) {
+                console.log("amount > minimumBet");
+                this.minimumBet = amount;
+            }
             player.bet(amount);
             return true;
         }
@@ -315,7 +308,8 @@ export class Poker extends Game {
 
     playerCall(player) {
         if (player == this.currentPlayer()) {
-            player.call();
+            console.log("CALLING WITH MIN BET: " + this.minimumBet);
+            player.call(this.minimumBet);
             return true;
         }
 
@@ -340,7 +334,6 @@ export class Poker extends Game {
     }
 
     inTable(playerID) {
-        console.log(playerID);
         for (let pid in this.players) {
             if (pid != null) {
                 let player = this.players[pid];
@@ -357,6 +350,7 @@ export class Poker extends Game {
     }
 
     addPlayer(seatNumber, data): boolean {
+        data['minimumBet'] = this.minimumBet;
         if (this.players[seatNumber] != null || this.inTable(data['socketid'])) {
             return false;
         }
@@ -371,7 +365,7 @@ export class Poker extends Game {
 
         // Update state
         // this.updateState('players.' + seatNumber.toString(), {});
-        this.updateState('seat', seatNumber);
+        this.updateState('foo', true);
         this.playerCount += 1;
         this.players[seatNumber].sitToggle();
         return true;
@@ -379,7 +373,6 @@ export class Poker extends Game {
 
     removePlayer(player): boolean {
         if (player == null) {
-            // console.log("No player to remove");
             return false;
         }
 
@@ -421,9 +414,7 @@ export class Poker extends Game {
     }
 
     canBet(player, amount) {
-        // console.log("player: " + player);
-        // console.log("has amount: " + !player.has(amount));
-        if (player && !player.has(amount) && !player.folded) {
+        if (player && !player.has(amount) && amount >= this.minimumBet && !player.folded) {
             return true;
         }
 
@@ -536,11 +527,7 @@ export class Poker extends Game {
         }
 
         else {
-            if (this.beforePlaying) {
-
-            }
-
-            else if (!this.playing) {
+           if (!this.playing) {
                 this.beforePlaying = true;
             }
 
@@ -575,7 +562,7 @@ export class Poker extends Game {
     }
 
     initStage() {
-        // console.log("\nInitializing stage...");
+        console.log("\nInitializing stage...");
         switch (this.stage) {
             case 0:
                 this.dealStage();
@@ -604,7 +591,7 @@ export class Poker extends Game {
         if (this.stage > 5) {
             this.stage = 0;
         }
-        // console.log("Next stage... (" +  this.stage + ")");
+        console.log("Next stage... (" +  this.stage + ")");
 
 
         this.resetAllPlayerTurns();
@@ -626,7 +613,7 @@ export class Poker extends Game {
 
         this.currentPlayerIndex = index;
 
-        console.log("Player " + this.currentPlayerIndex + " Turn");
+        // console.log("Player " + this.currentPlayerIndex + " Turn");
     }
 
     tableFull() {
@@ -688,36 +675,110 @@ export class Poker extends Game {
     }
 
     private rewardWinners() {
-        var winningPlayers = [];
-        var winningRanks = [];
+        let totalPot = 0;
+        let rankList = [];
 
+        // Tally up the total pot and get all the HandRanks of the other players and their seat number
         for (let i = 0; i < this.players.length; i++) {
-            if (this.players[i] && !this.players[i].folded) {
-                let handOf7 = this.players[i].hand.getCardsArray().concat(this.dealt.getCardsArray());
-                let playerRank = new HandRank(handOf7);
-
-                if (winningRanks.length == 0) {
-                    winningRanks.push(playerRank.rank);
-                } else {
-                    // console.log(winningRanks);
-                    let comparison = HandRank.compareRank(playerRank.rank, winningRanks[0].rank);
-                    if (comparison == 1) {
-                        winningPlayers = [i];
-                        winningRanks = [playerRank.rank];
-                    }
-
-                    else if (comparison == 0) {
-                        winningPlayers.push(i);
-                        winningRanks.push(playerRank.rank);
-                    }
+            if (this.players[i]) {
+                totalPot += this.players[i].betAmount;
+                if (!this.players[i].folded) {
+                    let handOf7 = this.players[i].hand.getCardsArray().concat(this.dealt.getCardsArray());
+                    rankList.push([i, new HandRank(handOf7)]);
                 }
             }
         }
 
-        // Get bet percentage of player and reward accordingly.
-        for (let i = 0; i < winningPlayers.length; i++) {
-            console.log("Player " + winningPlayers[i] + " won with " + this.players[winningPlayers[i]].hand.getCardsArray());
-            this.players[winningPlayers[i]].addMoney(this.totalPot * this.players[winningPlayers[i]].betAmount / this.totalPot);
+        for (let i = 0; i < rankList.length; i++) {
+            console.log("Player " + rankList[i][0] +  " has rank: " + rankList[i][1].rank.rank + " with hand:");
+            console.log(this.players[rankList[i][0]].hand.getCardsArray());
+        }
+
+        // Sort HandRanks by best to worst
+        rankList.sort(function(a, b) {
+            return HandRank.compareRank(a[1].rank, b[1].rank);
+        });
+        rankList.reverse();
+
+        // Put equal HandRanks together in the same List Object
+        let tempRankIndex = 0;
+        let tempRankList = [[rankList[0]]];
+        for (let i = 1; i < rankList.length; i++) {
+            if (HandRank.compareRank(rankList[i - 1][1].rank, rankList[i][1].rank) == 0) {
+                tempRankList[tempRankIndex].push(rankList[i]);
+            } else {
+                tempRankIndex += 1;
+                tempRankList.push([rankList[i]]);
+            }
+        }
+
+        console.log('tempRankList:');
+        console.log(tempRankList);
+
+        // Create side pots and distribute to highest ranked player
+        while (totalPot > 0) {
+            let pot = 0;
+            let min = Number.MAX_SAFE_INTEGER;
+            let minPlayers = [];
+
+            // Get the players who bet the minimum in this side pot.
+            for (let i = 0; i < this.players.length; i++) {
+                if (!this.players[i]) continue;
+
+                let betAmount = this.players[i].betAmount;
+                console.log("Player " + i + " betAmount is " + this.players[i].betAmount);
+                if (betAmount < min) {
+                    min = betAmount;
+                    minPlayers = [i];
+                } else if (betAmount == min){
+                    minPlayers.push(i);
+                }
+            }
+
+            console.log("minPlayers: ");
+            console.log(minPlayers);
+
+            // Add up the min pot of all players who have not folded.
+            for (let i = 0; i < this.players.length; i++) {
+                let player = this.players[i];
+                if (player != null && !player.folded) {
+                    pot += min;
+                }
+            }
+
+            console.log("pot: " + pot);
+
+            // tempRankList = [ [[0, new HandRank(handOf7)], [1, new HandRank(handOf7)]], [[4, new HandRank(handOf7)], [3, new HandRank(handOf7)]] ]
+            let potSplit = pot / tempRankList[0].length;
+            console.log("potSplit: " + potSplit);
+            let newRank = [];
+
+            for (let i = 0; i < tempRankList[0].length; i++) {
+                let index = minPlayers.indexOf(tempRankList[0][i]);
+                // If min player is part of the winning players
+                if (index >= 0) {
+                    minPlayers.slice(index, 1);
+                }
+
+                let playerIndex = tempRankList[0][i][0];
+                this.players[playerIndex].cash += potSplit;
+
+                let minIndex = minPlayers.indexOf(playerIndex);
+                if (minIndex >= 0) {
+                } else {
+                    newRank.push(tempRankList[0][i]);
+                }
+            }
+
+            if (newRank.length == 0) {
+                tempRankList.shift();
+            } else {
+                tempRankList[0] = newRank;
+            }
+
+            totalPot -= pot;
+            minPlayers.shift();
+            totalPot = 0;
         }
 
         this.forceNextStage = true;
@@ -725,6 +786,7 @@ export class Poker extends Game {
 
     private dealStage(): void {
         // console.log("Game is in the Deal Stage (0)");
+        this.minimumBet = Math.trunc(this.config.minimum / 10);
 
         while (!this.dealt.empty()) {
             this.deck.add(this.dealt.pop());
@@ -754,19 +816,16 @@ export class Poker extends Game {
         this.forceNextStage = true;
     }
 
-    public getState() {
-
-        return super.getState();
-    }
-
     private preFlop(): void {
         // console.log("Game is in the Pre Flop Stage (1)");
         // Add dealt cards back to the deck
+        this.minimumBet = this.defaultMinimumBet;
         this.updateState('dealt', this.dealt.getCardsArray());
     }
 
     private flop(): void {
         // console.log("Game is in the Flop Stage (2)");
+        this.minimumBet = 0;
         for (let i = 0; i < 3; i++) {
             this.dealt.add(this.deck.pop());
         }

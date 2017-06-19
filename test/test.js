@@ -3,6 +3,7 @@ var PokerEvaluator = require("poker-evaluator");
 
 let gameApp = require(__dirname + '/../app/game/game.js');
 let pokerApp = require(__dirname + '/../app/game/poker.js');
+let cardsApp = require(__dirname + '/../app/game/cards.js');
 // let subsets = pokerApp.subsets;
 // let cardList = Object.keys(pokerApp.cardSymbolMap);
 
@@ -42,43 +43,243 @@ describe('Game', function () {
 });
 
 describe('Poker', function () {
-   describe("Stages", function () {
-       it('Should be in PreFlop Stage', function () {
-           let poker = new pokerApp.Poker();
-           poker.addPlayer(0, {socketid: 'dummy0', money: 100});
-           poker.addPlayer(1, {socketid: 'dummy1', money: 120});
-           poker.dealer();
-           assert.equal(0, poker.stage);
+    describe("Stages", function () {
+        it('Should be in PreFlop Stage', function () {
+            let poker = new pokerApp.Poker();
+            poker.addPlayer(0, {socketid: 'dummy0', money: 100});
+            poker.addPlayer(1, {socketid: 'dummy1', money: 120});
+            poker.dealer();
+            poker.beforePlaying = false;
+            poker.playing = true;
+            poker.dealer();
 
-           poker.players[0].call();
-           poker.players[1].call();
-           poker.dealer();
-           assert.equal(1, poker.stage);
+            assert.equal(0, poker.stage);
 
-           poker.players[0].call();
-           poker.players[1].call();
-           poker.dealer();
-           poker.dealer();
-           assert.equal(2, poker.stage);
+            poker.players[0].call();
+            poker.players[1].call();
+            poker.dealer();
+            console.log(poker.allDone());
+            poker.dealer();
+            assert.equal(1, poker.stage);
 
-           poker.players[0].call();
-           poker.players[1].call();
-           poker.dealer();
-           poker.dealer();
-           assert.equal(3, poker.stage);
+            poker.players[0].call();
+            poker.players[1].call();
+            poker.dealer();
+            poker.dealer();
+            assert.equal(2, poker.stage);
 
-           poker.players[0].call();
-           poker.players[1].call();
-           poker.dealer();
-           poker.dealer();
-           assert.equal(4, poker.stage);
+            poker.players[0].call();
+            poker.players[1].call();
+            poker.dealer();
+            poker.dealer();
+            assert.equal(3, poker.stage);
 
-           poker.players[0].call();
-           poker.players[1].call();
-           poker.dealer();
-           poker.dealer();
-           assert.equal(5, poker.stage);
+            poker.players[0].call();
+            poker.players[1].call();
+            poker.dealer();
+            poker.dealer();
+            assert.equal(4, poker.stage);
 
-       });
-   })
+            poker.players[0].call();
+            poker.players[1].call();
+            poker.dealer();
+            poker.dealer();
+            assert.equal(5, poker.stage);
+
+        });
+    })
+
+    describe('rewardWinners-0', function() {
+        it('Should make player 0 win 200 and player 1 lose all money', function() {
+            let poker = new pokerApp.Poker();
+            poker.addPlayer(0, {socketid: 'dummy0', money: 100});
+            poker.addPlayer(1, {socketid: 'dummy1', money: 100});
+            poker.dealer();
+            poker.beforePlaying = false;
+            poker.playing = true;
+
+            poker.dealer(); // Init Stage
+            assert.equal(0, poker.stage);
+            poker.players[0].hand = new cardsApp.Cards(['AS', 'AD']);
+            poker.players[1].hand = new cardsApp.Cards(['2D', '3H']);
+            poker.dealer(); // Next Stage
+
+            poker.dealer(); // Init Stage
+            poker.playerBet(poker.players[0], 100);
+            poker.dealer(); // Next Player
+            assert.equal(100, poker.players[1].cash);
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+            assert.equal(0, poker.players[0].cash);
+            assert.equal(0, poker.players[1].cash);
+
+            poker.dealer(); // Init Stage
+            poker.playerCall(poker.players[0]);
+            poker.dealer(); // Next Player
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+            assert.equal(0, poker.players[0].cash);
+            assert.equal(0, poker.players[1].cash);
+
+            poker.dealer(); // Init Stage
+            poker.playerCall(poker.players[0]);
+            poker.dealer(); // Next Player
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+            assert.equal(0, poker.players[0].cash);
+            assert.equal(0, poker.players[1].cash);
+
+            poker.dealer(); // Init Stage
+            poker.playerCall(poker.players[0]);
+            poker.dealer(); // Next Player
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+            assert.equal(0, poker.players[0].cash);
+            assert.equal(0, poker.players[1].cash);
+            assert.equal(100, poker.players[0].betAmount);
+            assert.equal(100, poker.players[1].betAmount);
+
+            poker.dealer(); // Init stage
+            poker.playerCall(poker.players[0]);
+            poker.dealer(); // Next Player
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+
+            poker.dealt = new cardsApp.Cards(['AC', 'AH', '3D', '2H', '7C']);
+            assert.equal(200, poker.players[0].cash);
+            assert.equal(0,   poker.players[1].cash);
+            console.log(poker.players[0].cash);
+            console.log(poker.players[1].cash);
+
+        })
+    });
+
+    describe('rewardWinners-1', function() {
+        it('Should make player 1 win 200 and player 0 lose all money', function() {
+            let poker = new pokerApp.Poker();
+            poker.addPlayer(0, {socketid: 'dummy0', money: 100});
+            poker.addPlayer(1, {socketid: 'dummy1', money: 100});
+            poker.dealer();
+            poker.beforePlaying = false;
+            poker.playing = true;
+
+            poker.dealer(); // Init Stage
+            assert.equal(0, poker.stage);
+            poker.players[0].hand = new cardsApp.Cards(['AS', 'AH']);
+            poker.players[1].hand = new cardsApp.Cards(['KD', 'QD']);
+            poker.dealer(); // Next Stage
+
+            poker.dealer(); // Init Stage
+            poker.playerBet(poker.players[0], 100);
+            poker.dealer(); // Next Player
+            assert.equal(100, poker.players[1].cash);
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+            assert.equal(0, poker.players[0].cash);
+            assert.equal(0, poker.players[1].cash);
+
+            poker.dealer(); // Init Stage
+            poker.playerCall(poker.players[0]);
+            poker.dealer(); // Next Player
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+            assert.equal(0, poker.players[0].cash);
+            assert.equal(0, poker.players[1].cash);
+
+            poker.dealer(); // Init Stage
+            poker.playerCall(poker.players[0]);
+            poker.dealer(); // Next Player
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+            assert.equal(0, poker.players[0].cash);
+            assert.equal(0, poker.players[1].cash);
+
+            poker.dealer(); // Init Stage
+            poker.playerCall(poker.players[0]);
+            poker.dealer(); // Next Player
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+            assert.equal(0, poker.players[0].cash);
+            assert.equal(0, poker.players[1].cash);
+            assert.equal(100, poker.players[0].betAmount);
+            assert.equal(100, poker.players[1].betAmount);
+
+            poker.dealer(); // Init stage
+            poker.playerCall(poker.players[0]);
+            poker.dealer(); // Next Player
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+
+            poker.dealt = new cardsApp.Cards(['AD', 'JD', '0D', '2H', '7C']);
+            assert.equal(0,   poker.players[0].cash);
+            assert.equal(200, poker.players[1].cash);
+            console.log(poker.players[0].cash);
+            console.log(poker.players[1].cash);
+        })
+    });
+
+    describe('rewardWinners-2', function() {
+        it('Should make player 0 and player 0 tie and both win 100', function() {
+            let poker = new pokerApp.Poker();
+            poker.addPlayer(0, {socketid: 'dummy0', money: 100});
+            poker.addPlayer(1, {socketid: 'dummy1', money: 100});
+            poker.dealer();
+            poker.beforePlaying = false;
+            poker.playing = true;
+
+            poker.dealer(); // Init Stage
+            assert.equal(0, poker.stage);
+            poker.players[0].hand = new cardsApp.Cards(['AD', 'AH']);
+            poker.players[1].hand = new cardsApp.Cards(['AC', 'AS']);
+            poker.dealer(); // Next Stage
+
+            poker.dealer(); // Init Stage
+            poker.playerBet(poker.players[0], 100);
+            poker.dealer(); // Next Player
+            assert.equal(100, poker.players[1].cash);
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+            assert.equal(0, poker.players[0].cash);
+            assert.equal(0, poker.players[1].cash);
+
+            poker.dealer(); // Init Stage
+            poker.playerCall(poker.players[0]);
+            poker.dealer(); // Next Player
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+            assert.equal(0, poker.players[0].cash);
+            assert.equal(0, poker.players[1].cash);
+
+            poker.dealer(); // Init Stage
+            poker.playerCall(poker.players[0]);
+            poker.dealer(); // Next Player
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+            assert.equal(0, poker.players[0].cash);
+            assert.equal(0, poker.players[1].cash);
+
+            poker.dealer(); // Init Stage
+            poker.playerCall(poker.players[0]);
+            poker.dealer(); // Next Player
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+            assert.equal(0, poker.players[0].cash);
+            assert.equal(0, poker.players[1].cash);
+            assert.equal(100, poker.players[0].betAmount);
+            assert.equal(100, poker.players[1].betAmount);
+
+            poker.dealer(); // Init stage
+            poker.playerCall(poker.players[0]);
+            poker.dealer(); // Next Player
+            poker.playerCall(poker.players[1]);
+            poker.dealer(); // Next Stage
+
+            poker.dealt = new cardsApp.Cards(['AD', 'JD', '0D', '2H', '7C']);
+            assert.equal(100, poker.players[0].cash);
+            assert.equal(100, poker.players[1].cash);
+
+            console.log(poker.players[0].cash);
+            console.log(poker.players[1].cash);
+        })
+    });
 });
