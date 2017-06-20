@@ -208,7 +208,9 @@ export class GameServer {
                             if (timeLeft > 0) {
                             } else {
                                 console.log("Game starting!");
-                                room.game.addMessage('Game is starting!');
+                                // room.game.addMessage('Game is starting!');
+                                room.game.updateState('messages', ['Game is starting!']);
+                                room.game.updateState('turn', room.game.currentPlayerIndex);
                                 delete server.pausedRooms[room];
                             }
                         }
@@ -297,7 +299,6 @@ export class GameServer {
 
     private sendGameStates(room) {
         let stateChanges = room.game.getStateChanges();
-        let state = room.game.getState(); // TODO Remove this. Can't now because it updates player state...
         // console.log(poker.stateChanged);
         for (let i = 0; i < room.game.players.length; i++) {
             let player = room.game.players[i];
@@ -306,12 +307,13 @@ export class GameServer {
                 // if (room.game.isBeforePlay()) {
                 //     tempStateChanges.push(['seat', i]);
                 // }
-                if (i in this.sitters) {
-                    tempStateChanges.push(['seat', i]);
-                    delete this.sitters[i];
-                }
                 if (room.game.stage == 1) {
                     tempStateChanges.push(['hand', player.getHand().getCardsArray()]);
+                }
+
+                if (i in this.sitters) {
+                    tempStateChanges.unshift(['seat', i]);
+                    delete this.sitters[i];
                 }
                 let id = player.get('socketid');
                 // this.io.to(id).emit('newState', {state: state});

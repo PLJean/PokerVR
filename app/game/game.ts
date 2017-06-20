@@ -132,22 +132,29 @@ export class Game {
     protected stateChanges = [];
     private messages = [];
 
-    public getState() {
+    // public getState() {
+    //
+    //     for (let i = 0; i < this.players.length; i++) {
+    //         if (this.players[i] != null && this.players[i].stateHasChanged) {
+    //             this.updateState('players.' + i, this.players[i].getState());
+    //         }
+    //     }
+    //
+    //     this.stateChanges = [];
+    //
+    //     return this.state;
+    // }
 
+    public getStateChanges() {
         for (let i = 0; i < this.players.length; i++) {
             if (this.players[i] != null && this.players[i].stateHasChanged) {
                 this.updateState('players.' + i, this.players[i].getState());
             }
         }
-
-        this.stateChanges = [];
+        let changes = this.stateChanges;
         this.stateChanged = false;
-
-        return this.state;
-    }
-
-    public getStateChanges() {
-        return this.stateChanges;
+        this.stateChanges = [];
+        return changes;
     }
 
     public hasNewState() {

@@ -238,6 +238,7 @@ export class Poker extends Game {
     private playing = false;
     private paused = false;
     private currentPlayerIndex = 0;
+    private turnStartPlayerIndex = 0;
     private stageInitialized = false;
     private forceNextStage = false;
     private playerCount = 0;
@@ -615,9 +616,8 @@ export class Poker extends Game {
 
 
         this.resetAllPlayerTurns();
-
-        this.stageInitialized = false;
         this.currentPlayerIndex = 0;
+        this.stageInitialized = false;
     }
 
     nextPlayer() {
@@ -632,7 +632,7 @@ export class Poker extends Game {
         }
 
         this.currentPlayerIndex = index;
-
+        this.updateState('turn', this.currentPlayerIndex);
         // console.log("Player " + this.currentPlayerIndex + " Turn");
     }
 

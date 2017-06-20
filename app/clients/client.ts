@@ -12,7 +12,7 @@ export class Client {
         let self = this;
         this.socket = socketio();
         this.socket.on('newState', function(data) {
-            self.setState(data['state']);
+            // self.setState(data['state']);
         });
 
         this.socket.on('updateState', function(data) {
@@ -155,10 +155,6 @@ export class PokerClient extends Client {
 
     public setRooms(rooms) {
         this.rooms = rooms;
-    }
-
-    public setBetMin(min) {
-
     }
 
     public join(amount, roomID) {

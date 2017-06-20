@@ -81,12 +81,10 @@ function Room () {
             let rotation = this.el.getAttribute('rotation');
             let playerHeight = player.getAttribute('position').y;
             let dealtCards = document.querySelector('#dealt-cards');
-            let controls = document.querySelector('#controls-' + this.data);
             let chips = document.querySelector('#chips-' + this.data);
             player.setAttribute('position', new THREE.Vector3(position.x,  playerHeight, position.z));
             player.setAttribute('rotation', new THREE.Vector3(rotation.x, rotation.y, rotation.z));
             dealtCards.setAttribute('rotation', new THREE.Vector3(rotation.x, rotation.y, rotation.z));
-            controls.setAttribute('visible', true);
             chips.setAttribute('visible', true);
         }
     });
@@ -457,14 +455,37 @@ function Room () {
 
     AFRAME.registerComponent('dealer', {
         schema: {
-            seat: {type: 'number'}
+            seat: {type: 'number', default: -1}
         },
         card0: null,
         card1: null,
         dealt: [],
-        messages: ['', '', '', '', ''],
+        messages: [['', 'white'], ['', 'white'], ['', 'white'], ['', 'white'], ['', 'white']],
         init: function() {
             let dealer = this;
+
+            function addMessages(newMessages, colors) {
+                for (let i = 0; i < newMessages.length; i++) {
+                    dealer.messages.pop();
+                    let color = colors && i < colors.length ? colors[i] : 'white';
+                    dealer.messages.unshift([newMessages[i], color]);
+                }
+
+
+                for (let j = 0; j < dealer.messages.length; j++) {
+                    let announcement = document.querySelector('#announcement-' + j);
+                    let message = dealer.messages[j][0];
+                    let color = dealer.messages[j][1];
+                    announcement.setAttribute('text', {
+                        opacity: j != 4 ? 1 : 0.5,
+                        width: 5,
+                        align: 'center',
+                        value: message,
+                        color: color
+                    });
+                }
+            }
+
             poker.on('players\.\\d+', function() {
                 let players = poker.state['players'];
                 for (let playerSeat in players) {
@@ -481,6 +502,7 @@ function Room () {
 
             poker.on('seat', function() {
                 console.log("hasChanged() - Seat has changed");
+                if (dealer.data.seat != -1) return;
 
                 let seat = poker.state['seat'];
                 let chair = document.querySelector('#chair-' + seat.toString()).components.seat;
@@ -568,28 +590,28 @@ function Room () {
             poker.on('messages', function() {
                 let newMessages = poker.state['messages'];
                 console.log("Got a message: ");
-                for (let i = 0; i < newMessages.length; i++) {
-                    dealer.messages.pop();
-                    dealer.messages.unshift(newMessages[i]);
+                addMessages(newMessages);
+            });
+
+            poker.on('turn', function() {
+                let turn = poker.state['turn'];
+                let controls = document.querySelector('#controls-' + dealer.data.seat);
+
+                if (turn == dealer.data.seat) {
+                    controls.setAttribute('visible', true);
+                    addMessages(['Your Turn!'], ['red']);
                 }
 
-
-                for (let j = 0; j < dealer.messages.length; j++) {
-                    let announcement = document.querySelector('#announcement-' + j);
-                    let message = dealer.messages[j];
-                    announcement.setAttribute('text', {
-                        opacity: j != 4 ? 1 : 0.5,
-                        width: 5,
-                        align: 'center',
-                        value: message
-                    });
+                else {
+                    controls.setAttribute('visible', false);
+                    addMessages(['Player ' + turn + '\'s turn'], ['white'])
                 }
             });
         },
         tick: function() {
-            if (poker.hasChanged()) {
-                console.log(poker.state);
-            }
+            // if (poker.hasChanged()) {
+                // console.log(poker.state);
+            // }
             poker.processStateChanges();
         },
         update: function() {
@@ -924,10 +946,9 @@ function Room () {
 
             this.loadChipDistribution();
 
-            console.log("generating chips with value of " + val);
-            console.log('this.objectKeys.length: ' + this.objectKeys.length);
+            // console.log("generating chips with value of " + val);
+            // console.log('this.objectKeys.length: ' + this.objectKeys.length);
             for (let i = 0; i < this.objectKeys.length; i++) {
-                console.log(this.objectKeys[i]);
                 this.el.removeObject3D(this.objectKeys[i]);
             }
 
