@@ -274,7 +274,7 @@ function Room () {
             this.el.addEventListener('click', function(event) {
                 let roomIndex = self.data.page * self.data.perPage + self.highlighted;
                 if (self.highlighted != null) {
-                    poker.join(100, roomIndex)
+                    poker.join(20000, roomIndex)
                 }
             });
 
@@ -330,7 +330,7 @@ function Room () {
                     let room = rooms[key];
                     // Draw Top Symbol
                     ctx.fillText(room['playerCount'] + '/' + room['maxPlayerCount'] + ' Players', 50, 64);
-                    ctx.fillText(room['type'],400 , 64);
+                    ctx.fillText(room['type'], 400, 64);
                     ctx.fillText(room['minimum'] + '-' + room['maximum'] + ' Buy In', 700, 64);
                     row.material.map = new THREE.Texture(canvas);
                     row.material.map.needsUpdate = true;
@@ -811,6 +811,27 @@ function Room () {
             displayEl.className += ' clickable';
             upEl.className += ' clickable';
             downEl.className += ' clickable';
+            let self = this;
+            upEl.addEventListener('click', function() {
+                console.log(self.data.values[3]);
+                self.data.values[3] = parseInt(self.data.values[3]) + 1;
+                displayEl.setAttribute('text', {
+                    width: 5,
+                    color: '#000000',
+                    align: 'center',
+                    value: self.data.values[3].toString()
+                });
+            });
+
+            downEl.addEventListener('click', function() {
+                self.data.values[3] = parseInt(self.data.values[3]) - 1;
+                displayEl.setAttribute('text', {
+                    width: 5,
+                    color: '#000000',
+                    align: 'center',
+                    value: self.data.values[3].toString()
+                });
+            });
             displayEl.setAttribute('position', new THREE.Vector3(x, 0, 0));
             displayEl.setAttribute('text', {
                 width: 5,
@@ -824,7 +845,7 @@ function Room () {
         },
         getValue(index) {
             return this.data.values[index];
-        }
+        },
     });
 
     AFRAME.registerComponent('chips',{

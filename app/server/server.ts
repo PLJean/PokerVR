@@ -23,7 +23,10 @@ export class GameServer {
         let gameServer = this;
         this.createRoom('lobby');
         this.createRoom('poker-0', new Poker());
-        this.createRoom('poker-1', new Poker());
+        this.createRoom('poker-1', new Poker({type: 'Pot Limit'}));
+        this.createRoom('poker-2', new Poker());
+        this.createRoom('poker-3', new Poker({type: 'Fixed Limit'}));
+        this.createRoom('poker-4', new Poker({type: 'Pot Limit'}));
     }
 
     public listen(port, fn) {
