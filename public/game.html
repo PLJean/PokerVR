@@ -41,6 +41,10 @@
             </a-plane>
 
             <a-entity position="0 2.8 0">
+                <a-box width="20" depth="2" height="10" position="-59 0 34" rotation="0 90 0" material="src: #div-wall; "></a-box>
+
+                <a-box width="20" depth="2" height="10" position="-59 0 14" rotation="0 90 0" material="src: #div-wall; "></a-box>
+
                 <a-box width="20" depth="2" height="10" position="-59 0 -6" rotation="0 90 0" material="src: #div-wall; "></a-box>
 
                 <a-box width="20" depth="2" height="10" position="-50 0 -17" material="src: #div-wall; "></a-box>
@@ -56,13 +60,49 @@
                 <a-box width="20" depth="2" height="10" position="50 0 -17" material="src: #div-wall; "></a-box>
 
                 <a-box width="20" depth="2" height="10" position="59 0 -6" rotation="0 90 0" material="src: #div-wall; "></a-box>
+
+                <a-box width="20" depth="2" height="10" position="59 0 14" rotation="0 90 0" material="src: #div-wall; "></a-box>
+
+                <a-box width="20" depth="2" height="10" position="59 0 34" rotation="0 90 0" material="src: #div-wall; "></a-box>
+
+                <a-box width="20" depth="2" height="10" position="-50 0 43" material="src: #div-wall; "></a-box>
+
+                <a-box width="20" depth="2" height="10" position="-30 0 43" material="src: #div-wall; "></a-box>
+
+                <a-box width="20" depth="2" height="10" position="-10 0 43" material="src: #div-wall; "></a-box>
+
+                <a-box width="20" depth="2" height="10" position="10 0 43" material="src: #div-wall; "></a-box>
+
+                <a-box width="20" depth="2" height="10" position="30 0 43" material="src: #div-wall; "></a-box>
+
+                <a-box width="20" depth="2" height="10" position="50 0 43" material="src: #div-wall; "></a-box>
+
             </a-entity>
-
-
 
             <a-entity class="clickable" id="game-rooms-menu" game-rooms position="10 3 8.2" rotation="0 0 0" visible="false"></a-entity>
 
             <a-entity id="poker">
+                <a-entity id="table" position="-13 0 28" obj-model="obj: #poker-table-obj; mtl: #poker-table-mtl">
+                    <a-entity id="chairs">
+                        <a-entity id="chair-0" seat="0" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="0 0 3.86"       rotation="0 0 0"  ></a-entity>
+                        <a-entity id="chair-1" seat="1" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="4 0 1.836"      rotation="0 60 0" ></a-entity>
+                        <a-entity id="chair-2" seat="2" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="4.035 0 -3.218" rotation="0 120 0"></a-entity>
+                        <a-entity id="chair-3" seat="3" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="0 0 -5.07"      rotation="0 180 0"></a-entity>
+                        <a-entity id="chair-4" seat="4" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="-4 0 -3.69"     rotation="0 240 0"></a-entity>
+                        <a-entity id="chair-5" seat="5" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="-4.285 0 1.178" rotation="0 300 0"></a-entity>
+                    </a-entity>
+                </a-entity>
+                <a-entity id="table" position="13 0 28" obj-model="obj: #poker-table-obj; mtl: #poker-table-mtl">
+                    <a-entity id="chairs">
+                        <a-entity id="chair-0" seat="0" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="0 0 3.86"       rotation="0 0 0"  ></a-entity>
+                        <a-entity id="chair-1" seat="1" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="4 0 1.836"      rotation="0 60 0" ></a-entity>
+                        <a-entity id="chair-2" seat="2" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="4.035 0 -3.218" rotation="0 120 0"></a-entity>
+                        <a-entity id="chair-3" seat="3" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="0 0 -5.07"      rotation="0 180 0"></a-entity>
+                        <a-entity id="chair-4" seat="4" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="-4 0 -3.69"     rotation="0 240 0"></a-entity>
+                        <a-entity id="chair-5" seat="5" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="-4.285 0 1.178" rotation="0 300 0"></a-entity>
+                    </a-entity>
+                </a-entity>
+
                 <a-entity id="table" position="-21 0 0" obj-model="obj: #poker-table-obj; mtl: #poker-table-mtl">
                     <a-entity id="chairs">
                         <a-entity id="chair-0" seat="0" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="0 0 3.86"       rotation="0 0 0"  ></a-entity>
