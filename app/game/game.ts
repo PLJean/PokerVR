@@ -130,6 +130,7 @@ export class Game {
     protected state = {};
     protected stateChanged: boolean = false;
     protected stateChanges = [];
+    private messages = [];
 
     public getState() {
 
@@ -151,6 +152,22 @@ export class Game {
 
     public hasNewState() {
         return this.stateChanged;
+    }
+
+    public hasMessages() {
+        return this.messages.length > 0;
+    }
+
+    public getMessages() {
+        return this.messages;
+    }
+
+    public clearMessages() {
+        this.messages = [];
+    }
+
+    public addMessage(message) {
+        this.messages.push(message);
     }
 
     public updateState(key, value) {

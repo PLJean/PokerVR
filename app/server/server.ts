@@ -208,6 +208,7 @@ export class GameServer {
                             if (timeLeft > 0) {
                             } else {
                                 console.log("Game starting!");
+                                room.game.addMessage('Game is starting!');
                                 delete server.pausedRooms[room];
                             }
                         }

@@ -274,7 +274,7 @@ function Room () {
             this.el.addEventListener('click', function(event) {
                 let roomIndex = self.data.page * self.data.perPage + self.highlighted;
                 if (self.highlighted != null) {
-                    poker.join(20000, roomIndex)
+                    poker.join(200, roomIndex)
                 }
             });
 
@@ -462,23 +462,20 @@ function Room () {
         card0: null,
         card1: null,
         dealt: [],
+        messages: ['', '', '', '', ''],
         init: function() {
             let dealer = this;
             poker.on('players\.\\d+', function() {
                 let players = poker.state['players'];
                 for (let playerSeat in players) {
-                    // console.log(playerSeat);
-
                     let cardSpawn = document.querySelector('#card-spawn-' + playerSeat.toString());
                     let playerChips = document.querySelector('#chips-' + playerSeat.toString());
-                    // console.log(playerChips);
                     if (cardSpawn) {
                         playerChips.components['chips'].setAmount(poker.state.players[dealer.data.seat].cash);
                         cardSpawn.setAttribute('visible', true);
                         playerChips.setAttribute('visible', true);
                     }
                     playerChips = document.querySelector('#chips-' + playerSeat.toString());
-
                 }
             });
 
@@ -497,6 +494,8 @@ function Room () {
                 let hand = poker.state['hand'];
                 console.log(hand);
                 if (hand.length != 0) {
+                    let cards = document.querySelector('#cards-' + dealer.data.seat.toString());
+                    cards.setAttribute('visible', true);
                     dealer.card0 = document.querySelector('#card-' + dealer.data.seat.toString() + '-0').components.card;
                     dealer.card1 = document.querySelector('#card-' + dealer.data.seat.toString() + '-1').components.card;
 
@@ -563,6 +562,27 @@ function Room () {
                     dealtElem4.setAttribute('visible', true);
                     console.log("River");
 
+                }
+            });
+
+            poker.on('messages', function() {
+                let newMessages = poker.state['messages'];
+                console.log("Got a message: ");
+                for (let i = 0; i < newMessages.length; i++) {
+                    dealer.messages.pop();
+                    dealer.messages.unshift(newMessages[i]);
+                }
+
+
+                for (let j = 0; j < dealer.messages.length; j++) {
+                    let announcement = document.querySelector('#announcement-' + j);
+                    let message = dealer.messages[j];
+                    announcement.setAttribute('text', {
+                        opacity: j != 4 ? 1 : 0.5,
+                        width: 5,
+                        align: 'center',
+                        value: message
+                    });
                 }
             });
         },
@@ -812,7 +832,7 @@ function Room () {
             upEl.className += ' clickable';
             downEl.className += ' clickable';
             let self = this;
-            upEl.addEventListener('click', function() {
+            upEl.addEventListener('mousedown', function() {
                 console.log(self.data.values[3]);
                 self.data.values[3] = parseInt(self.data.values[3]) + 1;
                 displayEl.setAttribute('text', {
@@ -823,7 +843,7 @@ function Room () {
                 });
             });
 
-            downEl.addEventListener('click', function() {
+            downEl.addEventListener('mousedown', function() {
                 self.data.values[3] = parseInt(self.data.values[3]) - 1;
                 displayEl.setAttribute('text', {
                     width: 5,

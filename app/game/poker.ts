@@ -292,7 +292,7 @@ export class Poker extends Game {
    }
 
     playerBet(player, amount) {
-        if (player == this.currentPlayer() && this.canBet(player, amount)) {
+        if (this.canBet(player, amount)) {
             console.log("amount: " + amount);
             console.log("minimumBet: " + this.minimumBet);
             if (amount > this.minimumBet) {
@@ -300,6 +300,9 @@ export class Poker extends Game {
                 this.minimumBet = amount;
             }
             player.bet(amount);
+            this.addMessage('Player ' + player.get('seatNumber') + ' has bet ' + amount);
+
+
             return true;
         }
 
@@ -310,6 +313,15 @@ export class Poker extends Game {
         if (player == this.currentPlayer()) {
             console.log("CALLING WITH MIN BET: " + this.minimumBet);
             player.call(this.minimumBet);
+            if (this.minimumBet == 0) {
+                this.addMessage('Player ' + player.get('seatNumber') + ' has called');
+
+            }
+
+            else {
+                this.addMessage('Player ' + player.get('seatNumber') + ' has called ' + this.minimumBet);
+
+            }
             return true;
         }
 
@@ -319,6 +331,7 @@ export class Poker extends Game {
     playerFold(player) {
         if (player == this.currentPlayer()) {
             player.fold();
+            this.addMessage('Player ' + player.get('seatNumber') + ' has folded');
             return true;
         }
 
@@ -365,7 +378,8 @@ export class Poker extends Game {
 
         // Update state
         // this.updateState('players.' + seatNumber.toString(), {});
-        this.updateState('foo', true);
+        this.addMessage('Player has joined on seat ' + seatNumber);
+
         this.playerCount += 1;
         this.players[seatNumber].sitToggle();
         return true;
@@ -386,6 +400,7 @@ export class Poker extends Game {
         }
 
         this.updateState('players.' + seatNumber.toString(), null);
+        this.addMessage('Player has left ' + seatNumber);
         this.playerCount -= 1;
         return true;
     }
@@ -414,7 +429,7 @@ export class Poker extends Game {
     }
 
     canBet(player, amount) {
-        if (player && !player.has(amount) && amount >= this.minimumBet && !player.folded) {
+        if (player && player.has(amount) && !player.folded) {
             return true;
         }
 
@@ -521,6 +536,11 @@ export class Poker extends Game {
     }
 
     dealer(): boolean {
+        if (this.hasMessages()) {
+            this.updateState('messages', this.getMessages());
+            this.clearMessages();
+        }
+
         if (!this.tableHasTwo()) {
             this.stage = 0;
             return false;
@@ -786,7 +806,6 @@ export class Poker extends Game {
 
     private dealStage(): void {
         // console.log("Game is in the Deal Stage (0)");
-        this.minimumBet = Math.trunc(this.config.minimum / 10);
 
         while (!this.dealt.empty()) {
             this.deck.add(this.dealt.pop());
