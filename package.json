@@ -31,7 +31,6 @@
     "browserify": "^14.3.0",
     "chai": "^4.0.1",
     "mocha": "^3.4.2",
-    "pokersolver": "^2.1.2",
     "typescript": "^2.3.1",
     "watchify": "^3.9.0"
   }
