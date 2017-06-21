@@ -3,9 +3,10 @@ import {Cards} from "./cards";
 export class Player {
     cash: number = 0;
     hand: Cards = new Cards();
-    betAmount: number = 0;
+    potAmount: number = 0;
     folded: boolean = true;
     seated: boolean = false;
+    leaving: boolean = false;
     playerInfo = {
         'socketid': null,
     };
@@ -31,13 +32,17 @@ export class Player {
     public isSeated() {
         return this.seated;
     }
+
+    public isLeaving() {
+        return this.leaving;
+    }
       
 
     public stateHasChanged = true;
 
     call(amount) {
         if (amount) {
-            this.betAmount += amount;
+            this.potAmount += amount;
             this.cash -= amount;
         }
         this.state.action = [1, null];
@@ -45,8 +50,9 @@ export class Player {
     }
 
     bet(amount) {
-        this.betAmount += amount;
+        this.potAmount += amount;
         this.cash -= amount;
+        console.log('cash: ' + this.cash);
         this.state.action =  [2, amount];
         this.stateHasChanged = true;
     }
@@ -74,7 +80,7 @@ export class Player {
     }
 
     reset(deck: Cards) {
-        this.betAmount = 0;
+        this.potAmount = 0;
         this.folded = false;
         this.state.action = null;
         this.hand.clear();
@@ -90,11 +96,11 @@ export class Player {
     }
 
     has(amount) {
-        return amount >= 0 && amount < this.cash;
+        return amount >= 0 && amount <= this.cash;
     }
 
     get(key) {
-        // console.log(this.betAmount);
+        // console.log(this.potAmount);
         // console.log(this.playerInfo);
         if (this.playerInfo.hasOwnProperty(key)) {
             return this.playerInfo[key];

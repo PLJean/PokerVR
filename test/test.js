@@ -7,15 +7,6 @@ let cardsApp = require(__dirname + '/../app/game/cards.js');
 // let subsets = pokerApp.subsets;
 // let cardList = Object.keys(pokerApp.cardSymbolMap);
 
-// describe('HandRank', function() {
-//     describe("['AS', 'KS', 'JS', '0S', 'QS', '2C', '3C']", function() {
-//         it('Should be a Royal Flush (Rank 9)', function() {
-//             var rank = new pokerApp.HandRank(['AS', 'KS', 'JS', '0S', 'QS', '2C', '3C']).rank;
-//             assert.equal(rank.rank, 9);
-//         });
-//     });
-// });
-
 describe('Game', function () {
    describe('updateState-0', function () {
        it('Should set state["red"]["blue"] to the value 3', function () {
@@ -39,6 +30,88 @@ describe('Game', function () {
             game.updateState('', {'foo': 'bar'});
             assert.equal(Object.keys(game.state).length, 0);
         });
+    });
+});
+
+describe('HandRank-7', function() {
+   describe('onePair-0', function () {
+       it('Hand should be a one pair', function() {
+           let hand = new cardsApp.Cards(['AS', 'AD', 'KD', '0C', '2H', '4H', '5H']);
+           let handRank = new pokerApp.HandRank(hand.getCardsArray());
+           assert.equal(handRank.rank.rank, 1);
+       })
+   });
+
+    describe('twoPairs-0', function () {
+        it('Hand should be have two pairs', function() {
+            let hand = new cardsApp.Cards(['AS', 'AD', 'KD', '0C', 'KH', '4H', '5H']);
+            let handRank = new pokerApp.HandRank(hand.getCardsArray());
+            assert.equal(handRank.rank.rank, 2);
+        })
+    });
+
+    describe('threeOfAKind-0', function() {
+        it('Hand should have three of a kind', function() {
+            let hand = new cardsApp.Cards(['AS', 'AD', 'AC', '0C', 'KH', '4H', '5H']);
+            let handRank = new pokerApp.HandRank(hand.getCardsArray());
+            assert.equal(handRank.rank.rank, 3);
+        })
+    });
+
+    describe('straight-0', function() {
+        it('Hand should be a straight', function() {
+            let hand = new cardsApp.Cards(['AS', 'KS', '0S', 'JC', '2H', 'QH', '4H']);
+            let handRank = new pokerApp.HandRank(hand.getCardsArray());
+            assert.equal(handRank.rank.rank, 4);
+        })
+    });
+
+    describe('flush-0', function() {
+        it('Hand should be a flush', function() {
+            let hand = new cardsApp.Cards(['2C', '4C', '0S', 'JC', '5C', 'KC', '4H']);
+            let handRank = new pokerApp.HandRank(hand.getCardsArray());
+            assert.equal(handRank.rank.rank, 5);
+        })
+    });
+
+    describe('flush-1', function() {
+        it('Hand should be a flush', function() {
+            let hand = new cardsApp.Cards(['2C', '4C', 'QC', 'JC', '5C', 'KC', '7C']);
+            let handRank = new pokerApp.HandRank(hand.getCardsArray());
+            assert.equal(handRank.rank.rank, 5);
+        })
+    });
+
+    describe('fullHouse-0', function() {
+        it('Hand should be a full house', function() {
+            let hand = new cardsApp.Cards(['2C', '2C', 'QH', 'QD', '5C', 'QS', '7C']);
+            let handRank = new pokerApp.HandRank(hand.getCardsArray());
+            assert.equal(handRank.rank.rank, 6);
+        })
+    });
+
+    describe('fourOfAKind-0', function() {
+        it('Hand should have four of a kind', function() {
+            let hand = new cardsApp.Cards(['AS', 'AD', 'AC', '0C', 'KH', 'AH', '5H']);
+            let handRank = new pokerApp.HandRank(hand.getCardsArray());
+            assert.equal(handRank.rank.rank, 7);
+        })
+    });
+
+    describe('straightFlush-0', function() {
+        it('Hand should be a straight flush', function() {
+            let hand = new cardsApp.Cards(['2C', '4C', '4H', '4D', '5C', '3C', 'AC']);
+            let handRank = new pokerApp.HandRank(hand.getCardsArray());
+            assert.equal(handRank.rank.rank, 8);
+        })
+    });
+
+    describe('royalFlush-0', function() {
+        it('Hand should be a royal flush', function() {
+            let hand = new cardsApp.Cards(['AD', 'JD', '0D', '2H', '7C', 'KD', 'QD']);
+            let handRank = new pokerApp.HandRank(hand.getCardsArray());
+            assert.equal(handRank.rank.rank, 9);
+        })
     });
 });
 
@@ -89,6 +162,17 @@ describe('Poker', function () {
         });
     })
 
+    describe('bet-0', function() {
+        it('Should make player 0 bet 100 and player 1 call 100', function() {
+            let poker = new pokerApp.Poker();
+            poker.addPlayer(0, {socketid: 'dummy0', money: 100});
+            poker.addPlayer(1, {socketid: 'dummy1', money: 100});
+            poker.dealer();
+            poker.beforePlaying = false;
+            poker.playing = true;
+        });
+    });
+
     describe('rewardWinners-0', function() {
         it('Should make player 0 win 200 and player 1 lose all money', function() {
             let poker = new pokerApp.Poker();
@@ -105,6 +189,8 @@ describe('Poker', function () {
             poker.dealer(); // Next Stage
 
             poker.dealer(); // Init Stage
+            assert.equal(100, poker.players[0].cash);
+            console.log(poker.players[0].cash);
             poker.playerBet(poker.players[0], 100);
             poker.dealer(); // Next Player
             assert.equal(100, poker.players[1].cash);
@@ -136,16 +222,16 @@ describe('Poker', function () {
             poker.dealer(); // Next Stage
             assert.equal(0, poker.players[0].cash);
             assert.equal(0, poker.players[1].cash);
-            assert.equal(100, poker.players[0].betAmount);
-            assert.equal(100, poker.players[1].betAmount);
+            assert.equal(100, poker.players[0].potAmount);
+            assert.equal(100, poker.players[1].potAmount);
 
+            poker.dealt = new cardsApp.Cards(['AC', 'AH', '3D', '2H', '7C']);
             poker.dealer(); // Init stage
             poker.playerCall(poker.players[0]);
             poker.dealer(); // Next Player
             poker.playerCall(poker.players[1]);
             poker.dealer(); // Next Stage
 
-            poker.dealt = new cardsApp.Cards(['AC', 'AH', '3D', '2H', '7C']);
             assert.equal(200, poker.players[0].cash);
             assert.equal(0,   poker.players[1].cash);
             console.log(poker.players[0].cash);
@@ -201,16 +287,16 @@ describe('Poker', function () {
             poker.dealer(); // Next Stage
             assert.equal(0, poker.players[0].cash);
             assert.equal(0, poker.players[1].cash);
-            assert.equal(100, poker.players[0].betAmount);
-            assert.equal(100, poker.players[1].betAmount);
+            assert.equal(100, poker.players[0].potAmount);
+            assert.equal(100, poker.players[1].potAmount);
 
+            poker.dealt = new cardsApp.Cards(['AD', 'JD', '0D', '2H', '7C']);
             poker.dealer(); // Init stage
             poker.playerCall(poker.players[0]);
             poker.dealer(); // Next Player
             poker.playerCall(poker.players[1]);
             poker.dealer(); // Next Stage
 
-            poker.dealt = new cardsApp.Cards(['AD', 'JD', '0D', '2H', '7C']);
             assert.equal(0,   poker.players[0].cash);
             assert.equal(200, poker.players[1].cash);
             console.log(poker.players[0].cash);
@@ -265,16 +351,16 @@ describe('Poker', function () {
             poker.dealer(); // Next Stage
             assert.equal(0, poker.players[0].cash);
             assert.equal(0, poker.players[1].cash);
-            assert.equal(100, poker.players[0].betAmount);
-            assert.equal(100, poker.players[1].betAmount);
+            assert.equal(100, poker.players[0].potAmount);
+            assert.equal(100, poker.players[1].potAmount);
 
+            poker.dealt = new cardsApp.Cards(['AD', 'JD', '0D', '2H', '7C']);
             poker.dealer(); // Init stage
             poker.playerCall(poker.players[0]);
             poker.dealer(); // Next Player
             poker.playerCall(poker.players[1]);
             poker.dealer(); // Next Stage
 
-            poker.dealt = new cardsApp.Cards(['AD', 'JD', '0D', '2H', '7C']);
             assert.equal(100, poker.players[0].cash);
             assert.equal(100, poker.players[1].cash);
 

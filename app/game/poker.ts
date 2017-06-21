@@ -22,6 +22,8 @@ export class HandRank {
 
     static getRank5(hand: string[]) {
         var histograms = HandRank.getHistograms(hand);
+        console.log(histograms);
+        console.log(histograms);
         var flush = null;
         var straightLo = -1;
         var straightHi = -1;
@@ -72,6 +74,8 @@ export class HandRank {
             }
 
             else if (count == 2) {
+                // Skip second 'A' symbol
+                if (i == 14) continue;
                 pairs.push(i);
             }
 
@@ -232,7 +236,6 @@ export class Poker extends Game {
     private dealt: Cards  = new Cards();
     private stage: number = 0;
     private lastStage: number = 0;
-    private pots = {main: 0};
     private beforePlaying = false;
     private beforePaused = false;
     private playing = false;
@@ -242,6 +245,9 @@ export class Poker extends Game {
     private stageInitialized = false;
     private forceNextStage = false;
     private playerCount = 0;
+    private activePlayerCount = 0;
+    private totalPot = 0;
+
     private ons = {
         'beforePaused': function() {
 
@@ -293,6 +299,7 @@ export class Poker extends Game {
    }
 
     playerBet(player, amount) {
+        console.log('canBet: ' + this.canBet(player, amount));
         if (this.canBet(player, amount)) {
             console.log("amount: " + amount);
             console.log("minimumBet: " + this.minimumBet);
@@ -301,6 +308,7 @@ export class Poker extends Game {
                 this.minimumBet = amount;
             }
             player.bet(amount);
+            this.totalPot += amount;
             this.addMessage('Player ' + player.get('seatNumber') + ' has bet ' + amount);
 
 
@@ -316,10 +324,10 @@ export class Poker extends Game {
             player.call(this.minimumBet);
             if (this.minimumBet == 0) {
                 this.addMessage('Player ' + player.get('seatNumber') + ' has called');
-
             }
 
             else {
+                this.totalPot += this.minimumBet;
                 this.addMessage('Player ' + player.get('seatNumber') + ' has called ' + this.minimumBet);
 
             }
@@ -333,6 +341,7 @@ export class Poker extends Game {
         if (player == this.currentPlayer()) {
             player.fold();
             this.addMessage('Player ' + player.get('seatNumber') + ' has folded');
+            this.activePlayerCount -= 1;
             return true;
         }
 
@@ -386,6 +395,13 @@ export class Poker extends Game {
         return true;
     }
 
+    getReadyToRemove(player): boolean {
+        if (player == null)
+            return false;
+
+        player.leaving = true;
+    }
+
     removePlayer(player): boolean {
         if (player == null) {
             return false;
@@ -430,6 +446,10 @@ export class Poker extends Game {
     }
 
     canBet(player, amount) {
+        console.log("player: " + player);
+        console.log("player has " + amount + ": " + player.has(amount));
+        console.log("player actually has: " + player.cash);
+        console.log("player is folded: " + player.folded);
         if (player && player.has(amount) && !player.folded) {
             return true;
         }
@@ -567,7 +587,11 @@ export class Poker extends Game {
                 }
 
                 else if (this.currentPlayer().isDone()) {
-                    if (this.allDone()) {
+                    if (this.activePlayerCount == 1) {
+                        this.stage = 5;
+                        this.stageInitialized = false;
+                    }
+                    else if (this.allDone()) {
                         this.nextStage();
                     } else {
                         let oldIndex = this.currentPlayerIndex;
@@ -697,23 +721,25 @@ export class Poker extends Game {
         else return this.players[seat] != null ? seat : null;
     }
 
-    private rewardWinners() {
-        let totalPot = 0;
+    rewardMultipleWinners() {
+        console.log('multiple winners');
+        let totalPot = this.totalPot;
         let rankList = [];
 
         // Tally up the total pot and get all the HandRanks of the other players and their seat number
         for (let i = 0; i < this.players.length; i++) {
-            if (this.players[i]) {
-                totalPot += this.players[i].betAmount;
-                if (!this.players[i].folded) {
-                    let handOf7 = this.players[i].hand.getCardsArray().concat(this.dealt.getCardsArray());
-                    rankList.push([i, new HandRank(handOf7)]);
-                }
+            if (this.players[i] && !this.players[i].folded) {
+                let handOf7 = this.players[i].hand.getCardsArray().concat(this.dealt.getCardsArray());
+                rankList.push([i, new HandRank(handOf7)]);
             }
         }
 
         for (let i = 0; i < rankList.length; i++) {
-            console.log("Player " + rankList[i][0] +  " has rank: " + rankList[i][1].rank.rank + " with hand:");
+            console.log("Player " + rankList[i][0] +  " has rank " + rankList[i][1].rank.rank + " with hand:");
+            let rankKeys = Object.keys(rankList[i][1]);
+            for (let key in rankKeys) {
+                console.log(key + ": " + rankKeys[key]);
+            }
             console.log(this.players[rankList[i][0]].hand.getCardsArray());
         }
 
@@ -722,6 +748,9 @@ export class Poker extends Game {
             return HandRank.compareRank(a[1].rank, b[1].rank);
         });
         rankList.reverse();
+
+        console.log('rankList:');
+        console.log(rankList);
 
         // Put equal HandRanks together in the same List Object
         let tempRankIndex = 0;
@@ -735,11 +764,12 @@ export class Poker extends Game {
             }
         }
 
-        console.log('tempRankList:');
+        console.log('tempRankList: ');
         console.log(tempRankList);
 
         // Create side pots and distribute to highest ranked player
         while (totalPot > 0) {
+            console.log('totalPot: ' + totalPot);
             let pot = 0;
             let min = Number.MAX_SAFE_INTEGER;
             let minPlayers = [];
@@ -748,12 +778,12 @@ export class Poker extends Game {
             for (let i = 0; i < this.players.length; i++) {
                 if (!this.players[i]) continue;
 
-                let betAmount = this.players[i].betAmount;
-                console.log("Player " + i + " betAmount is " + this.players[i].betAmount);
-                if (betAmount < min) {
-                    min = betAmount;
+                let potAmount = this.players[i].potAmount;
+                console.log("Player " + i + " potAmount is " + this.players[i].potAmount);
+                if (potAmount < min) {
+                    min = potAmount;
                     minPlayers = [i];
-                } else if (betAmount == min){
+                } else if (potAmount == min){
                     minPlayers.push(i);
                 }
             }
@@ -802,6 +832,38 @@ export class Poker extends Game {
             totalPot -= pot;
             minPlayers.shift();
             totalPot = 0;
+
+            console.log('tempRankList: ');
+            console.log(tempRankList);
+        }
+
+    }
+
+    rewardOneWinner() {
+        console.log('one winner');
+        let i = 0;
+        let winner;
+
+        while ((!this.players[i] || !this.players[i].folded) && i < this.players.length) {
+            if (!this.players[i])
+            i += 1;
+        }
+
+        this.players[i].cash += this.totalPot;
+    }
+
+    private rewardWinners() {
+
+        if (this.activePlayerCount == 1) {
+            this.rewardOneWinner();
+        }
+
+        else if (this.activePlayerCount > 1) {
+            this.rewardMultipleWinners();
+        }
+
+        else {
+            console.log("No winners?");
         }
 
         this.forceNextStage = true;
@@ -814,12 +876,12 @@ export class Poker extends Game {
             this.deck.add(this.dealt.pop());
         }
 
-        // Add plsyer cards back to the deck
-        for (let player of this.players) {
-            if (player != null) {
-                this.deck.addCards(player.hand);
-            }
-        }
+        // Add player cards back to the deck
+        // for (let player of this.players) {
+        //     if (player != null) {
+        //         this.deck.addCards(player.hand);
+        //     }
+        // }
 
         this.resetAllPlayers();
 
@@ -829,7 +891,6 @@ export class Poker extends Game {
         for (let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
             if (player != null) {
-
                 this.dealPlayer(player);
             }
 
@@ -870,14 +931,22 @@ export class Poker extends Game {
     }
 
     private resetAllPlayers() {
+        this.activePlayerCount = 0;
+        this.totalPot = 0;
         for (let i = 0; i < this.players.length; i++) {
-            if (this.players[i] != null) this.players[i].reset(this.deck);
+            if (this.players[i] != null) {
+                // this.deck.addCards(this.players[i].hand);
+                this.players[i].reset(this.deck);
+                this.activePlayerCount += 1;
+            }
         }
     }
 
     private resetAllPlayerTurns() {
         for (let i = 0; i < this.players.length; i++) {
-            if (this.players[i] != null) this.players[i].resetTurn();
+            if (this.players[i] != null) {
+                this.players[i].resetTurn();
+            }
         }
     }
 
