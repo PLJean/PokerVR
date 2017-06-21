@@ -202,39 +202,22 @@ export class GameServer {
                 let room = rooms[roomID];
 
                 if (roomID != 'lobby' && room) {
-                    if (room.game.inPlay()) {
-                        if (room in pausedRooms) {
-                            let timeLeft = ((server.pausedRooms[room][0] - new Date().getTime()));
-                            if (timeLeft > 0) {
-                            } else {
-                                console.log("Game starting!");
-                                // room.game.addMessage('Game is starting!');
-                                room.game.updateState('messages', ['Game is starting!']);
-                                room.game.updateState('turn', room.game.currentPlayerIndex);
-                                delete server.pausedRooms[room];
-                            }
+                    if (room.game.isPaused()) {
+                        let timeLeft = ((server.pausedRooms[room][0] - new Date().getTime()));
+                        if (timeLeft > 0) {
+
+                        } else {
+                            console.log("Game starting!");
+                            room.game.paused = false;
+                            room.game.playing = true;
+                            room.game.updateState('messages', ['Game is starting!']);
+                            delete server.pausedRooms[room];
                         }
+                    }
 
-                        else {
-                            // console.log('Play');
-                            if (server.oldStage != room.game.stage) {
-                                server.oldStage = room.game.stage;
-
-                                // if (room.game.stage == 0) {
-                                //
-                                // } else if (room.game.stage == 1) {
-                                //
-                                // } else if (room.game.stage == 2) {
-                                //
-                                // } else if (room.game.stage == 3) {
-                                //
-                                // } else if (room.game.stage == 4) {
-                                //
-                                // } else if (room.game.stage == 5) {
-                                //
-                                // }
-
-                            }
+                    else if (room.game.inPlay()) {
+                        if (server.oldStage != room.game.stage) {
+                            server.oldStage = room.game.stage;
                         }
                     }
 
@@ -243,7 +226,7 @@ export class GameServer {
                         server.pausedRooms[room] = [new Date().getTime() + pauseTime, pauseTime];
                         server.sendPause(room, 5);
                         room.game.beforePlaying = false;
-                        room.game.playing = true;
+                        room.game.paused = true;
                     }
 
                     room.game.dealer();

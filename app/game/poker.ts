@@ -548,7 +548,10 @@ export class Poker extends Game {
         }
 
         else {
-           if (!this.playing) {
+            if (this.paused) {
+
+            }
+            else if (!this.playing && !this.beforePlaying) {
                 this.beforePlaying = true;
             }
 
@@ -617,7 +620,6 @@ export class Poker extends Game {
 
         this.resetAllPlayerTurns();
         this.currentPlayerIndex = 0;
-        this.updateState('turn', this.currentPlayerIndex);
         this.stageInitialized = false;
     }
 
@@ -840,6 +842,7 @@ export class Poker extends Game {
         // console.log("Game is in the Pre Flop Stage (1)");
         // Add dealt cards back to the deck
         this.minimumBet = this.defaultMinimumBet;
+        this.updateState('turn', this.currentPlayerIndex);
         this.updateState('dealt', this.dealt.getCardsArray());
     }
 
@@ -850,6 +853,7 @@ export class Poker extends Game {
             this.dealt.add(this.deck.pop());
         }
 
+        this.updateState('turn', this.currentPlayerIndex);
         this.updateState('dealt', this.dealt.getCardsArray());
     }
 
@@ -860,6 +864,8 @@ export class Poker extends Game {
         //     console.log("Game is in the River Stage (4)");
 
         this.dealt.add(this.deck.pop());
+
+        this.updateState('turn', this.currentPlayerIndex);
         this.updateState('dealt', this.dealt.getCardsArray());
     }
 

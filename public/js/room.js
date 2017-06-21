@@ -461,6 +461,7 @@ function Room () {
         },
         card0: null,
         card1: null,
+        turn: null,
         dealt: [],
         messages: [['', 'white', ], ['', 'white'], ['', 'white'], ['', 'white'], ['', 'white']],
         init: function() {
@@ -596,6 +597,10 @@ function Room () {
 
             poker.on('turn', function() {
                 let turn = poker.state['turn'];
+
+                if (turn == dealer.turn) return;
+
+                dealer.turn = turn;
                 let controls = document.querySelector('#controls-' + dealer.data.seat);
 
                 if (turn == dealer.data.seat) {
