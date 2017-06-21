@@ -81,10 +81,12 @@ function Room () {
             let rotation = this.el.getAttribute('rotation');
             let playerHeight = player.getAttribute('position').y;
             let dealtCards = document.querySelector('#dealt-cards');
+            let announcements = document.querySelector('#announcements');
             let chips = document.querySelector('#chips-' + this.data);
             player.setAttribute('position', new THREE.Vector3(position.x,  playerHeight, position.z));
             player.setAttribute('rotation', new THREE.Vector3(rotation.x, rotation.y, rotation.z));
             dealtCards.setAttribute('rotation', new THREE.Vector3(rotation.x, rotation.y, rotation.z));
+            announcements.setAttribute('rotation', new THREE.Vector3(rotation.x, rotation.y, rotation.z));
             chips.setAttribute('visible', true);
         }
     });
@@ -460,7 +462,7 @@ function Room () {
         card0: null,
         card1: null,
         dealt: [],
-        messages: [['', 'white'], ['', 'white'], ['', 'white'], ['', 'white'], ['', 'white']],
+        messages: [['', 'white', ], ['', 'white'], ['', 'white'], ['', 'white'], ['', 'white']],
         init: function() {
             let dealer = this;
 
@@ -589,7 +591,6 @@ function Room () {
 
             poker.on('messages', function() {
                 let newMessages = poker.state['messages'];
-                console.log("Got a message: ");
                 addMessages(newMessages);
             });
 

@@ -617,6 +617,7 @@ export class Poker extends Game {
 
         this.resetAllPlayerTurns();
         this.currentPlayerIndex = 0;
+        this.updateState('turn', this.currentPlayerIndex);
         this.stageInitialized = false;
     }
 
