@@ -230,9 +230,6 @@ describe('Poker', function () {
 
             assert.equal(200, poker.players[0].cash);
             assert.equal(0,   poker.players[1].cash);
-            console.log(poker.players[0].cash);
-            console.log(poker.players[1].cash);
-
         })
     });
 
@@ -295,8 +292,6 @@ describe('Poker', function () {
 
             assert.equal(0,   poker.players[0].cash);
             assert.equal(200, poker.players[1].cash);
-            console.log(poker.players[0].cash);
-            console.log(poker.players[1].cash);
         })
     });
 
@@ -359,9 +354,6 @@ describe('Poker', function () {
 
             assert.equal(100, poker.players[0].cash);
             assert.equal(100, poker.players[1].cash);
-
-            console.log(poker.players[0].cash);
-            console.log(poker.players[1].cash);
         })
     });
 });

@@ -969,10 +969,29 @@ function Room () {
                 let chip = this.chips[chipValue];
 
                 for (let i = 0; i < chip.count; i++) {
-                    let geometry = new THREE.CylinderGeometry(r, r, h);
+                    let geometry = new THREE.CylinderGeometry(r, r, h, 16);
+                    let numberOfSides = geometry.faces.length;
+                    console.log("number of sides: " + numberOfSides);
+                    let blacked = true;
+                    let countTwo = 0;
+                    for (let j = 0; j < numberOfSides / 2; j++) {
+                        if (blacked) {
+                            geometry.faces[j].color.set(0x000000);
+                        }
+
+                        countTwo += 1;
+                        if (countTwo == 2) {
+                            blacked = !blacked;
+                            countTwo = 0;
+                        }
+
+                    }
                     let material = new THREE.MeshBasicMaterial( {color: '#' + chip.color } );
+                    material.vertexColors = THREE.FaceColors;
                     let chipMesh = new THREE.Mesh(geometry, material);
                     chipMesh.position.set(currentPosition.x, currentPosition.y, currentPosition.z);
+                    chipMesh.rotation.set(0,  (Math.floor(Math.random() * 360) * Math.PI) / 180, 0);
+
                     let typeText = 'chip-' + chipValue + "-" + i;
                     this.objectKeys.push(typeText);
                     this.el.setObject3D(typeText, chipMesh);
