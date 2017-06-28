@@ -490,6 +490,10 @@ function Room () {
         }
     });
 
+    AFRAME.registerComponent('head', {
+
+    });
+
     AFRAME.registerComponent('dealer', {
         schema: {
             seat: {type: 'number', default: -1}
@@ -531,15 +535,32 @@ function Room () {
                 let players = poker.state['players'];
                 for (let playerSeat in players) {
                     let cardSpawn = document.querySelector('#card-spawn-' + playerSeat.toString());
+                    let cash = poker.state.players[playerSeat].cash;
                     let playerChips = document.querySelector('#chips-' + playerSeat.toString());
+                    let playerChipText = document.querySelector('#chips-value-' + playerSeat.toString());
+                    let playerHead = document.querySelector('#head-' + playerSeat.toString());
+                    playerHead.setAttribute('rotation', new Vector3(poker.state['rotation']['x'], poker.state['rotation']['y'], poker.state['rotation']['z']))
                     if (cardSpawn) {
-                        playerChips.components['chips'].setAmount(poker.state.players[playerSeat].cash);
+                        playerChips.components['chips'].setAmount(cash);
+                        playerChipText.setAttribute('text', {
+                            value: cash.toString(),
+                            align: 'center',
+                            width: 2.5
+                        });
                         cardSpawn.setAttribute('visible', true);
                         playerChips.setAttribute('visible', true);
                     }
-                    playerChips = document.querySelector('#chips-' + playerSeat.toString());
                 }
             });
+
+            // poker.on('players\.\\d+\.rotation', function() {
+            //     let players = poker.state['players'];
+            //     for (let playerSeat in players) {
+            //         let playerHead = document.querySelector('#head-' + playerSeat.toString());
+            //         let playerHeadAnimation = document.querySelector('#head-animation-' + playerSeat.toString());
+            //         playerHeadAnimation.setAttribute('from', )
+            //     }
+            // });
 
             poker.on('seat', function() {
                 console.log("hasChanged() - Seat has changed");
@@ -560,8 +581,6 @@ function Room () {
                     console.log("hasChanged() - Hand has changed");
                     dealer.card0 = document.querySelector('#card-' + dealer.data.seat.toString() + '-0').components.card;
                     dealer.card1 = document.querySelector('#card-' + dealer.data.seat.toString() + '-1').components.card;
-                    console.log(dealer.card0);
-                    console.log(dealer.card1);
                     // console.log(this.card0);
                     dealer.card0.setCard(hand[0][0] == '0' ? '10' : hand[0][0], hand[0][1]);
                     dealer.card1.setCard(hand[1][0] == '0' ? '10' : hand[1][0], hand[1][1]);
@@ -738,7 +757,14 @@ function Room () {
                 cardSwitch = !cardSwitch;
 
                 if (!dealAnimation || !card || ! spawn) {
-                    dealer.show();
+                    dealer.show(
+                        document.querySelector('#card-' + dealer.data.seat + '-0'),
+                        document.querySelector('#show-animation-' + dealer.data.seat + '-0'));
+                    setTimeout(function() {
+                        dealer.show(
+                            document.querySelector('#card-' + dealer.data.seat + '-1'),
+                            document.querySelector('#show-animation-' + dealer.data.seat + '-1'), 500);
+                    });
                     return;
                 }
 
@@ -766,7 +792,7 @@ function Room () {
             console.log("in undeal");
             console.log(cardIndex);
             let dealer = this;
-            if (dealer.currentTurnNumber == 0) {
+            if (dealer.currentTurnNumber == 1) {
                 dealer.shuffle();
                 return;
             }
@@ -819,11 +845,12 @@ function Room () {
                     // dealAnimation.setAttribute('to', new THREE.Vector3(pos.x, pos.y, pos.z));
                     console.log('undeal-' + cardIndex);
                     if (cardIndex.split('-')[0] == dealer.data.seat) {
-                        dealer.unshow();
+                          dealer.unshow(card, document.querySelector('#unshow-animation-' + cardIndex));
+                    } else {
+                        card.emit('undeal');
                     }
 
                     console.log(card);
-                    card.emit('undeal');
                     console.log(dealAnimation);
                 }
 
@@ -837,17 +864,45 @@ function Room () {
 
             dealAux(cardIndex, false);
         },
-        show: function () {
-            let card0 = document.querySelector('#card-' + this.data.seat + '-0');
-            let card1 = document.querySelector('#card-' + this.data.seat + '-1');
-            card0.emit('show');
-            card1.emit('show');
+        // show: function (card) {
+        //     card.emit('show');
+        // },
+        show: function (card, animation) {
+            // let card0 = document.querySelector('#card-' + this.data.seat + '-0');
+            // let card1 = document.querySelector('#card-' + this.data.seat + '-1');
+            // let card0Animation = document.querySelector('#unshow-animation-' + this.data.seat + '-0');
+            // let card1Animation = document.querySelector('#unshow-animation-' + this.data.seat + '-1');
+            // let animationEnd0 = function() {
+            //     card0.emit('undeal');
+            //     animation.removeEventListener('animationend', animationEnd0);
+            // };
+            let animationEnd = function () {
+                animation.removeEventListener('animationend', animationEnd);
+            };
+            animation.addEventListener('animationend', animationEnd);
+            // animation.addEventListener('animationend', animationEnd1);
+
+            card.emit('show');
+            // card1.emit('unshow');
         },
-        unshow: function () {
-            let card0 = document.querySelector('#card-' + this.data.seat + '-0');
-            let card1 = document.querySelector('#card-' + this.data.seat + '-1');
-            card0.emit('unshow');
-            card1.emit('unshow');
+        unshow: function (card, animation) {
+            // let card0 = document.querySelector('#card-' + this.data.seat + '-0');
+            // let card1 = document.querySelector('#card-' + this.data.seat + '-1');
+            // let card0Animation = document.querySelector('#unshow-animation-' + this.data.seat + '-0');
+            // let card1Animation = document.querySelector('#unshow-animation-' + this.data.seat + '-1');
+            // let animationEnd0 = function() {
+            //     card0.emit('undeal');
+            //     animation.removeEventListener('animationend', animationEnd0);
+            // };
+            let animationEnd = function() {
+                card.emit('undeal');
+                animation.removeEventListener('animationend', animationEnd);
+            };
+            animation.addEventListener('animationend', animationEnd);
+            // animation.addEventListener('animationend', animationEnd1);
+
+            card.emit('unshow');
+            // card1.emit('unshow');
         },
         toggleReverseAnimations: function(cardIndex) {
             console.log('toggling on ' + cardIndex);

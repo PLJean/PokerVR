@@ -102,7 +102,7 @@
                         <a-entity id="announcement-0" text="value: ; width: 5; align: center;" position="0 -0.6 0"></a-entity>
                     </a-entity>
 
-                    <a-entity id="card-0-0" card="suit: clubs; symbol: 'A'"  position="0 0 0" scale=".35 .35 1" rotation="90 30 0">
+                    <a-entity id="card-0-0" card="suit: clubs; symbol: 'A'"  position="-0.239 0.170 0" scale=".35 .35 1" rotation="90 90 0">
                         <a-animation id="deal-rot-animation-0-0" attribute="rotation"
                                      dur="400"
                                      begin="deal"
@@ -112,18 +112,18 @@
                         <a-animation id="deal-pos-animation-0-0" attribute="position"
                                      dur="500"
                                      begin="deal"
-                                     from="0 0.15 0"
+                                     from="-0.239 0.170 0"
                                      to="-1.23 0.15 2.6">
                         </a-animation>
                         <a-animation id="undeal-pos-animation-0-0" attribute="position"
                                      dur="400"
                                      begin="undeal"
-                                     to="0 0 0">
+                                     to="-0.239 0.170 0">
                         </a-animation>
                         <a-animation id="undeal-rot-animation-0-0" attribute="rotation"
                                      dur="400"
                                      begin="undeal"
-                                     to="90 30 0">
+                                     to="90 90 0">
                         </a-animation>
                         <a-animation id="show-animation-0-0" attribute="rotation"
                                      dur="400"
@@ -139,7 +139,7 @@
                         </a-animation>
                     </a-entity>
 
-                    <a-entity id="card-0-1" card="suit: hearts; symbol: 'A'" position="0 0 0" scale=".35 .35 1" rotation="90 30 0">
+                    <a-entity id="card-0-1" card="suit: hearts; symbol: 'A'" position="-0.239 0.170 0" scale=".35 .35 1" rotation="90 90 0">
                         <a-animation id="deal-rot-animation-0-1" attribute="rotation"
                                      dur="400"
                                      begin="deal"
@@ -160,7 +160,7 @@
                         <a-animation id="undeal-rot-animation-0-1" attribute="rotation"
                                      dur="400"
                                      begin="undeal"
-                                     to="90 30 0">
+                                     to="90 90 0">
                         </a-animation>
                         <a-animation id="show-animation-0-1" attribute="rotation"
                                      dur="400"
@@ -176,7 +176,7 @@
                         </a-animation>
                     </a-entity>
 
-                    <a-entity id="card-1-0" card="suit: clubs; symbol: 'A'"  position="0 0 0" scale=".35 .35 1" rotation="90 30 0">
+                    <a-entity id="card-1-0" card="suit: clubs; symbol: 'A'"  position="-0.239 0.170 0" scale=".35 .35 1" rotation="90 90 0">
                         <a-animation id="deal-rot-animation-1-0" attribute="rotation"
                                      dur="400"
                                      begin="deal"
@@ -186,18 +186,18 @@
                         <a-animation id="deal-pos-animation-1-0" attribute="position"
                                      dur="500"
                                      begin="deal"
-                                     from="0 0.15 0"
+                                     from="-0.239 0.170 0"
                                      to="1.640 0.15 2.460">
                         </a-animation>
                         <a-animation id="undeal-pos-animation-1-0" attribute="position"
                                      dur="400"
                                      begin="undeal"
-                                     to="0 0 0">
+                                     to="-0.239 0.170 0">
                         </a-animation>
                         <a-animation id="undeal-rot-animation-1-0" attribute="rotation"
                                      dur="400"
                                      begin="undeal"
-                                     to="90 30 0">
+                                     to="90 90 0">
                         </a-animation>
                         <a-animation id="show-animation-1-0" attribute="rotation"
                                      dur="400"
@@ -213,7 +213,7 @@
                         </a-animation>
                     </a-entity>
 
-                    <a-entity id="card-1-1" card="suit: hearts; symbol: 'A'" position="0 0 0" scale=".35 .35 1" rotation="90 30 0">
+                    <a-entity id="card-1-1" card="suit: hearts; symbol: 'A'" position="-0.239 0.170 0" scale=".35 .35 1" rotation="90 90 0">
                         <a-animation id="deal-rot-animation-1-1" attribute="rotation"
                                      dur="400"
                                      begin="deal"
@@ -223,18 +223,18 @@
                         <a-animation id="deal-pos-animation-1-1" attribute="position"
                                      dur="500"
                                      begin="deal"
-                                     from="0 0.15 0"
+                                     from="-0.239 0.170 0"
                                      to="1.646 0.150 2.056">
                         </a-animation>
                         <a-animation id="undeal-pos-animation-1-1" attribute="position"
                                      dur="400"
                                      begin="undeal"
-                                     to="0 0 0">
+                                     to="-0.239 0.170 0">
                         </a-animation>
                         <a-animation id="undeal-rot-animation-1-1" attribute="rotation"
                                      dur="400"
                                      begin="undeal"
-                                     to="90 30 0">
+                                     to="90 90 0">
                         </a-animation>
                         <a-animation id="show-animation-1-1" attribute="rotation"
                                      dur="700"
@@ -250,7 +250,12 @@
                         </a-animation>
                     </a-entity>
 
-                    <a-entity id="deck" deck position="0 0.225 0" rotation="90 90 0">
+
+                    <a-entity id="head-0" head="0">
+                        <a-sphere></a-sphere>
+                    </a-entity>
+
+                    <a-entity id="deck" deck position="0 0.167 0" rotation="90 90 0">
                         <a-entity id="deck-quarter" geometry="primitive: box; width: 0.35; height: 0.5; depth: 0.012" material="color: white;" position="0 0 -0.024" scale="1 1 1">
                             <a-entity card position="0 -0.24 -0.008" scale=".35 .35 1"></a-entity>
                             <a-animation id="shuffle-animation" attribute="position"
@@ -276,8 +281,6 @@
                         <a-entity id="dealt-card-2" card="suit: clubs; symbol: 'A'"  position="0 0 0"     scale=".35 .35 1" rotation="0 0 0" visible="false"></a-entity>
                         <a-entity id="dealt-card-3" card="suit: clubs; symbol: 'A'"  position=".375 0 0"  scale=".35 .35 1" rotation="0 0 0" visible="false"></a-entity>
                         <a-entity id="dealt-card-4" card="suit: clubs; symbol: 'A'"  position="0.75 0 0"  scale=".35 .35 1" rotation="0 0 0" visible="false"></a-entity>
-
-
                     </a-entity>
 
                     <a-entity id="card-spawn-0" position="0 0.145 3"     rotation="0 0 0" visible="false">
@@ -286,7 +289,9 @@
                         <a-entity id="controls-0" position="-0.545 0.02 0.167" rotation="-90 0 0" scale="0.25 0.25 1" visible="false"
                                   button-panel="values: Fold, Call, Bet, 100;
                                             functions: poker.fold(), poker.call(), poker.bet(parseInt(self.getValue(3))), "></a-entity>
-                        <a-entity id="chips-0" chips position="0 0 -0.6" visible="false"></a-entity>
+                        <a-entity id="chips-0" chips position="0 0 -0.6" visible="false">
+                            <a-entity id="chips-value-0" position="0 0.5 0" text="value: 100; align: center; width: 2.5;"></a-entity>
+                        </a-entity>
                     </a-entity>
 
                     <a-entity id="card-spawn-1" position="2.645 0.145 1.649"    rotation="0 60 0" visible="false">
@@ -298,7 +303,9 @@
                         <a-entity id="controls-1" position="-0.545 0.02 0.167" rotation="-90 0 0" scale="0.25 0.25 1" visible="false"
                                   button-panel="values: Fold, Call, Bet, 100;
                                             functions: poker.fold(), poker.call(), poker.bet(parseInt(self.getValue(3))), "></a-entity>
-                        <a-entity id="chips-1" chips position="0 0 -0.6" visible="false"></a-entity>
+                        <a-entity id="chips-1" chips position="0 0 -0.6" visible="false">
+                            <a-entity id="chips-value-1" position="0 0.5 0" text="value: 100; align: center; width: 2.5;"></a-entity>
+                        </a-entity>
                     </a-entity>
 
                     <a-entity id="card-spawn-2" position="2.55 0.145 -1.656"  rotation="0 120 0" visible="false">
@@ -310,7 +317,9 @@
                         <a-entity id="controls-2" position="-0.545 0.02 0.167" rotation="-90 0 0" scale="0.25 0.25 1" visible="false"
                                   button-panel="values: Fold, Call, Bet, 100;
                                             functions: poker.fold(), poker.call(), poker.bet(parseInt(self.getValue(3))), "></a-entity>
-                        <a-entity id="chips-2" chips position="0 0 -0.6" visible="false"></a-entity>
+                        <a-entity id="chips-2" chips="value: 100;" position="0 0 -0.6" visible="false">
+                            <a-entity id="chips-value-2" position="0 0.5 0" text="value: 100; align: center; width: 2.5;"></a-entity>
+                        </a-entity>
                     </a-entity>
 
                     <a-entity id="card-spawn-3" position="0 0.145 -3"      rotation="0 180 0" visible="false">
@@ -322,7 +331,7 @@
                         <a-entity id="controls-3" position="-0.545 0.02 0.167" rotation="-90 0 0" scale="0.25 0.25 1" visible="false"
                                   button-panel="values: Fold, Call, Bet, 100;
                                             functions: poker.fold(), poker.call(), poker.bet(parseInt(self.getValue(3))), "></a-entity>
-                        <a-entity id="chips-3" chips position="0 0 -0.6" visible="false"></a-entity>
+                        <a-entity id="chips-3" chips="value: 100;" position="0 0 -0.6" visible="false"></a-entity>
                     </a-entity>
 
                     <a-entity id="card-spawn-4" position="-2.645 0.145 -1.649" rotation="0 240 0" visible="false">
@@ -334,7 +343,7 @@
                         <a-entity id="controls-4" position="-0.545 0.02 0.167" rotation="-90 0 0" scale="0.25 0.25 1" visible="false"
                                   button-panel="values: Fold, Call, Bet, 100;
                                             functions: poker.fold(), poker.call(), poker.bet(parseInt(self.getValue(3))), "></a-entity>
-                        <a-entity id="chips-4" chips position="0 0 -0.6" visible="false"></a-entity>
+                        <a-entity id="chips-4" chips="value: 100;" position="0 0 -0.6" visible="false"></a-entity>
                     </a-entity>
 
                     <a-entity id="card-spawn-5" position="-2.55 0.145 1.656"   rotation="0 300 0" visible="false">
@@ -346,7 +355,7 @@
                         <a-entity id="controls-5" position="-0.545 0.02 0.167" rotation="-90 0 0" scale="0.25 0.25 1" visible="false"
                                   button-panel="values: Fold, Call, Bet, 100;
                                             functions: poker.fold(), poker.call(), poker.bet(parseInt(self.getValue(3))), "></a-entity>
-                        <a-entity id="chips-5" chips position="0 0 -0.6" visible="false"></a-entity>
+                        <a-entity id="chips-5" chips="value: 100;" position="0 0 -0.6" visible="false"></a-entity>
                     </a-entity>
 
                 </a-entity>

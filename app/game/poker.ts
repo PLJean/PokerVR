@@ -22,8 +22,6 @@ export class HandRank {
 
     static getRank5(hand: string[]) {
         var histograms = HandRank.getHistograms(hand);
-        console.log(histograms);
-        console.log(histograms);
         var flush = null;
         var straightLo = -1;
         var straightHi = -1;
