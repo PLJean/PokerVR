@@ -24,6 +24,17 @@ let game = function(type, index) {
     return gameServer.rooms[type + '-' + index].game;
 };
 
+let gameSkip = function(game) {
+    while (game.stage != 4) {
+        for (let i = 0; i < game.players.length; i++) {
+            if (game.players[i]){
+                game.players[i].call();
+            }
+        }
+        game.dealer();
+    }
+};
+
 app.use(express.static('public/'));
 app.use('app/', express.static('/app/clients/client.js'));
 

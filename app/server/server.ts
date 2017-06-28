@@ -196,6 +196,7 @@ export class GameServer {
         let rooms = this.rooms;
         let pausedRooms = this.pausedRooms;
         let pauseTime = 5000;
+        let gameStateCount = 0;
         var loop = function () {
             let roomKeys = Object.keys(rooms);
             for (let roomID in rooms) {
@@ -232,7 +233,7 @@ export class GameServer {
                     room.game.dealer();
 
                     if (room.game && room.game.hasNewState()) {
-                        server.sendGameStates(room);
+                        server.sendGameStates(room, ++gameStateCount);
                     }
                 }
             }
@@ -280,7 +281,7 @@ export class GameServer {
         }
     }
 
-    private sendGameStates(room) {
+    private sendGameStates(room, stateNumber) {
         let stateChanges = room.game.getStateChanges();
         // console.log(poker.stateChanged);
         for (let i = 0; i < room.game.players.length; i++) {
@@ -300,7 +301,7 @@ export class GameServer {
                 }
                 let id = player.get('socketid');
                 // this.io.to(id).emit('newState', {state: state});
-                this.io.to(id).emit('updateState', {changes: tempStateChanges});
+                this.io.to(id).emit('updateState', {id: stateNumber, changes: tempStateChanges});
             }
         }
     }

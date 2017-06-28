@@ -301,6 +301,10 @@ export class Poker extends Game {
     playerBet(player, amount) {
         console.log('canBet: ' + this.canBet(player, amount));
         if (this.canBet(player, amount)) {
+            for (let i = 0; i < this.players.length; i++) {
+                if (this.players[i] && !this.players[i].folded) this.players[i].resetTurn();
+            }
+
             console.log("amount: " + amount);
             console.log("minimumBet: " + this.minimumBet);
             if (amount > this.minimumBet) {
@@ -410,11 +414,6 @@ export class Poker extends Game {
         player.reset(this.deck);
         let seatNumber = player.playerInfo['seatNumber'];
         this.players[seatNumber] = null;
-
-        // Reset poker only if the table is empty
-        if (!this.tableHasTwo()) {
-            this.resetGame();
-        }
 
         this.updateState('players.' + seatNumber.toString(), null);
         this.addMessage('Player has left ' + seatNumber);
@@ -562,7 +561,15 @@ export class Poker extends Game {
             this.clearMessages();
         }
 
-        if (!this.tableHasTwo()) {
+        if (this.activePlayerCount == 1) {
+            this.stage = 5;
+            this.initStage();
+            this.resetAllPlayers();
+            this.nextStage();
+            console.log(this.activePlayerCount);
+        }
+
+        else if (!this.tableHasTwo()) {
             this.stage = 0;
             return false;
         }
@@ -587,11 +594,7 @@ export class Poker extends Game {
                 }
 
                 else if (this.currentPlayer().isDone()) {
-                    if (this.activePlayerCount == 1) {
-                        this.stage = 5;
-                        this.stageInitialized = false;
-                    }
-                    else if (this.allDone()) {
+                    if (this.allDone()) {
                         this.nextStage();
                     } else {
                         let oldIndex = this.currentPlayerIndex;
@@ -686,7 +689,8 @@ export class Poker extends Game {
             if (this.players[i] != null) count++;
         }
 
-        if (count > 1) return true;
+        if (count > 1)
+            return true;
 
         return false;
     }
@@ -844,12 +848,14 @@ export class Poker extends Game {
         let i = 0;
         let winner;
 
-        while ((!this.players[i] || !this.players[i].folded) && i < this.players.length) {
-            if (!this.players[i])
+        while (i < this.players.length) {
+            if (this.players[i] && !this.players[i].folded) break;
+
             i += 1;
         }
 
         this.players[i].cash += this.totalPot;
+        this.addMessage('Player ' + i + ' has won ' + this.totalPot + ' (total: ' + this.players[i].cash + ')');
     }
 
     private rewardWinners() {
@@ -895,7 +901,8 @@ export class Poker extends Game {
             }
 
         }
-
+        this.turnNumber += 1;
+        this.updateState('turnNumber', this.turnNumber);
         this.forceNextStage = true;
     }
 
@@ -932,6 +939,8 @@ export class Poker extends Game {
 
     private resetAllPlayers() {
         this.activePlayerCount = 0;
+        this.currentPlayerIndex = 0;
+
         this.totalPot = 0;
         for (let i = 0; i < this.players.length; i++) {
             if (this.players[i] != null) {

@@ -91,6 +91,40 @@ function Room () {
         }
     });
 
+    // AFRAME.registerComponent('deck', {
+    //    animatedCards: [],
+    //    init: function() {
+    //        var cardMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff , side: THREE.DoubleSide});
+    //        var cardGeometry = new THREE.PlaneGeometry(1, 1);
+    //
+    //        cardGeometry.applyMatrix( new THREE.Matrix4().makeTranslation(0, 0.5, 0 ) );
+    //
+    //        for (let i = 0; i < 4; i++) {
+    //            var canvas = document.createElement('canvas');
+    //            var ctx = canvas.getContext("2d");
+    //            var cardMesh;
+    //            canvas.width = 250;
+    //            canvas.height = 350;
+    //
+    //            // Fill background
+    //            ctx.fillStyle = 'white';
+    //            ctx.fillRect(0, 0, canvas.width, canvas.height);
+    //
+    //            // Fill inner layer
+    //            ctx.fillStyle = 'red';
+    //            ctx.fillRect(25, 35, canvas.width - 25 * 2, canvas.height - 35 * 2);
+    //
+    //            cardMaterial.map = new THREE.Texture(canvas);
+    //            cardMaterial.map.needsUpdate = true;
+    //            cardMesh = new THREE.Mesh(cardGeometry, cardMaterial);
+    //            this.animatedCards.push(cardMesh);
+    //            this.el.setObject3D('mesh', cardMesh);
+    //        }
+    //
+    //
+    //    }
+    // });
+
     AFRAME.registerComponent('card', {
         schema: {
             suit: {type: 'string'},
@@ -102,6 +136,8 @@ function Room () {
             var frontMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
             var backMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
             var geometry = new THREE.PlaneGeometry(1, 1);
+
+            // Set origin to bottom of card
             geometry.applyMatrix( new THREE.Matrix4().makeTranslation(0, 0.5, 0 ) );
 
             this.front = new THREE.Mesh(geometry, frontMaterial);
@@ -111,7 +147,6 @@ function Room () {
             this.el.setObject3D('back', this.back);
 
             // Set the scale of card mesh to the 1.4/1 ratio of a card
-            // TODO Initialize card as PlaneGeometry(1.4, 1)
             this.front.scale.set(1, 1.4, 1);
             this.back.scale.set(1, 1.4, 1);
 
@@ -463,10 +498,13 @@ function Room () {
         card1: null,
         turn: null,
         dealt: [],
-        messages: [['', 'white', ], ['', 'white'], ['', 'white'], ['', 'white'], ['', 'white']],
+        currentTurnNumber: 0,
+    messages: [['', 'white', ], ['', 'white'], ['', 'white'], ['', 'white'], ['', 'white']],
         init: function() {
             let dealer = this;
-
+            let dealtNumber = 0;
+            let handNumber =  0;
+            // let currentTurnNumber = 0;
             function addMessages(newMessages, colors) {
                 for (let i = 0; i < newMessages.length; i++) {
                     dealer.messages.pop();
@@ -495,7 +533,7 @@ function Room () {
                     let cardSpawn = document.querySelector('#card-spawn-' + playerSeat.toString());
                     let playerChips = document.querySelector('#chips-' + playerSeat.toString());
                     if (cardSpawn) {
-                        playerChips.components['chips'].setAmount(poker.state.players[dealer.data.seat].cash);
+                        playerChips.components['chips'].setAmount(poker.state.players[playerSeat].cash);
                         cardSpawn.setAttribute('visible', true);
                         playerChips.setAttribute('visible', true);
                     }
@@ -515,26 +553,26 @@ function Room () {
             });
 
             poker.on('hand', function() {
-                console.log("hasChanged() - Hand has changed");
                 let hand = poker.state['hand'];
                 console.log(hand);
-                if (hand.length != 0) {
-                    let cards = document.querySelector('#cards-' + dealer.data.seat.toString());
-                    cards.setAttribute('visible', true);
+                console.log('turn: ' + dealer.currentTurnNumber);
+                if (hand.length != 0 && dealer.currentTurnNumber > handNumber) {
+                    console.log("hasChanged() - Hand has changed");
                     dealer.card0 = document.querySelector('#card-' + dealer.data.seat.toString() + '-0').components.card;
                     dealer.card1 = document.querySelector('#card-' + dealer.data.seat.toString() + '-1').components.card;
-
+                    console.log(dealer.card0);
+                    console.log(dealer.card1);
                     // console.log(this.card0);
                     dealer.card0.setCard(hand[0][0] == '0' ? '10' : hand[0][0], hand[0][1]);
                     dealer.card1.setCard(hand[1][0] == '0' ? '10' : hand[1][0], hand[1][1]);
-                    dealer.card0.rotate();
-                    dealer.card1.rotate();
+                    handNumber = dealer.currentTurnNumber;
                 }
             });
 
             poker.on('dealt', function() {
                 console.log("hasChanged() - Dealt has changed");
                 let dealt = poker.state['dealt'];
+                let turnNumber = poker.state['turnNumber'];
                 if (dealt.length == 0) {
                     let dealtElem0 = document.querySelector('#dealt-card-0');
                     let dealtElem1 = document.querySelector('#dealt-card-1');
@@ -542,11 +580,16 @@ function Room () {
                     let dealtElem3 = document.querySelector('#dealt-card-3');
                     let dealtElem4 = document.querySelector('#dealt-card-4');
 
+
                     dealtElem0.setAttribute('visible', false);
                     dealtElem1.setAttribute('visible', false);
                     dealtElem2.setAttribute('visible', false);
                     dealtElem3.setAttribute('visible', false);
                     dealtElem4.setAttribute('visible', false);
+                    if (turnNumber > dealer.currentTurnNumber) {
+                        dealer.currentTurnNumber = turnNumber;
+                        dealer.undeal();
+                    }
                 }
                 else if (dealt.length == 3) {
                     let dealtElem0 = document.querySelector('#dealt-card-0');
@@ -588,6 +631,13 @@ function Room () {
                     console.log("River");
 
                 }
+
+                console.log(dealer.currentTurnNumber);
+                console.log(turnNumber);
+                // if (turnNumber > dealer.currentTurnNumber) {
+                //     dealer.undeal();
+                // }
+
             });
 
             poker.on('messages', function() {
@@ -626,7 +676,206 @@ function Room () {
         reset: function() {
             this.card0 = null;
             this.card1 = null;
+        },
+        shuffle: function(index = 0) {
+            console.log('in shuffle');
+            let deckQuarter = document.querySelector('#deck-quarter');
+            let shuffle = document.querySelector('#shuffle-animation');
+            let antiShuffle = document.querySelector('#anti-shuffle-animation');
+            let dealer = this;
+            let shuffleEnd = function() {
+                deckQuarter.emit('anti-shuffle');
+                // let newShuffle = shuffle.cloneNode(true);
+                // shuffle.parentNode.replaceChild(newShuffle, shuffle);
+                shuffle.removeEventListener('animationend', shuffleEnd);
+            };
+            let antiShuffleEnd = function() {
+                if (index < 3) {
+                    dealer.shuffle(++index);
+                }
+                else  {
+                    dealer.deal();
+                }
+                // let newAntiShuffle = antiShuffle.cloneNode(true);
+                // antiShuffle.parentNode.replaceChild(newAntiShuffle, antiShuffle);
+                antiShuffle.removeEventListener('animationend', antiShuffleEnd);
+            };
+
+            shuffle.addEventListener('animationend', shuffleEnd);
+            antiShuffle.addEventListener('animationend', antiShuffleEnd);
+
+            deckQuarter.emit('shuffle');
+        },
+        deal: function(cardIndex = '0-0') {
+            console.log("in deal");
+            let dealer = this;
+            let cardIndexIncrement = function(cardIndex, cardSwitch) {
+                let indices = cardIndex.split('-');
+                if (cardSwitch) {
+                    indices[0] = (parseInt(indices[0]) + 1).toString();
+                    indices[1] = 0;
+
+                } else {
+                    indices[1] = 1;
+                }
+
+                let newCardIndex = indices[0] + '-' + indices[1];
+                return newCardIndex;
+            };
+
+            let dealAux = function (cardIndex, cardSwitch) {
+                // console.log(cardIndex);
+                // console.log(cardSwitch);
+                let dealAnimation = document.querySelector('#deal-pos-animation-' + cardIndex);
+                let card = document.querySelector('#card-' + cardIndex);
+                let spawn = document.querySelector('#card-spawn-' + cardIndex.split('-')[0]);
+                let newCardIndex = cardIndexIncrement(cardIndex, cardSwitch);
+                let dealEnd = function() {
+                    dealAux(newCardIndex, cardSwitch);
+                    dealAnimation.removeEventListener('animationend', dealEnd);
+                };
+
+                cardSwitch = !cardSwitch;
+
+                if (!dealAnimation || !card || ! spawn) {
+                    dealer.show();
+                    return;
+                }
+
+                // When current animation ends, init the next animation
+                dealAnimation.addEventListener('animationend', dealEnd);
+
+                // //Start deal animation
+
+                if (spawn.getAttribute('visible') == true) {
+                    // dealAnimation.setAttribute('to', new THREE.Vector3(pos.x, pos.y, pos.z));
+                    console.log('deal-' + cardIndex);
+                    card.emit('deal');
+                }
+
+                else {
+                    dealAux(newCardIndex, cardSwitch)
+                }
+
+            };
+
+            dealAux(cardIndex, false);
+
+        },
+        undeal: function(cardIndex = '0-0') {
+            console.log("in undeal");
+            console.log(cardIndex);
+            let dealer = this;
+            if (dealer.currentTurnNumber == 0) {
+                dealer.shuffle();
+                return;
+            }
+
+            let cardIndexIncrement = function(cardIndex, cardSwitch) {
+                let indices = cardIndex.split('-');
+                if (cardSwitch) {
+                    indices[0] = (parseInt(indices[0]) + 1).toString();
+                    indices[1] = 0;
+
+                } else {
+                    indices[1] = 1;
+                }
+
+                let newCardIndex = indices[0] + '-' + indices[1];
+                return newCardIndex;
+            };
+
+            let dealAux = function (cardIndex, cardSwitch) {
+                let dealAnimation = document.querySelector('#undeal-pos-animation-' + cardIndex);
+                let card = document.querySelector('#card-' + cardIndex);
+                let spawn = document.querySelector('#card-spawn-' + cardIndex.split('-')[0]);
+                let newCardIndex = cardIndexIncrement(cardIndex, cardSwitch);
+                let dealEnd = function() {
+                    console.log('animationend');
+                    dealAux(newCardIndex, cardSwitch);
+                    console.log(dealAnimation.parentNode);
+                    // let newDealAnimation = dealAnimation.cloneNode(true);
+                    // dealAnimation.parentNode.replaceChild(newDealAnimation, dealAnimation);
+                    console.log('animation-out');
+                    dealAnimation.removeEventListener('animationend', dealEnd);
+                };
+                cardSwitch = !cardSwitch;
+
+                console.log(dealAnimation);
+                console.log(card);
+                console.log(spawn);
+                console.log(newCardIndex);
+                if (!dealAnimation || !card || ! spawn) {
+                    dealer.shuffle();
+                    return false;
+                }
+
+                // When current animation ends, init the next animation
+                dealAnimation.addEventListener('animationend', dealEnd);
+
+                // //Start deal animation
+
+                if (spawn.getAttribute('visible') == true) {
+                    // dealAnimation.setAttribute('to', new THREE.Vector3(pos.x, pos.y, pos.z));
+                    console.log('undeal-' + cardIndex);
+                    if (cardIndex.split('-')[0] == dealer.data.seat) {
+                        dealer.unshow();
+                    }
+
+                    console.log(card);
+                    card.emit('undeal');
+                    console.log(dealAnimation);
+                }
+
+                else {
+                    dealAux(newCardIndex, cardSwitch)
+                }
+
+                return true;
+
+            };
+
+            dealAux(cardIndex, false);
+        },
+        show: function () {
+            let card0 = document.querySelector('#card-' + this.data.seat + '-0');
+            let card1 = document.querySelector('#card-' + this.data.seat + '-1');
+            card0.emit('show');
+            card1.emit('show');
+        },
+        unshow: function () {
+            let card0 = document.querySelector('#card-' + this.data.seat + '-0');
+            let card1 = document.querySelector('#card-' + this.data.seat + '-1');
+            card0.emit('unshow');
+            card1.emit('unshow');
+        },
+        toggleReverseAnimations: function(cardIndex) {
+            console.log('toggling on ' + cardIndex);
+            let show = document.querySelector('#show-animation-' + cardIndex);
+            let dealRot = document.querySelector('#deal-rot-animation-' + cardIndex);
+            let dealPos = document.querySelector('#deal-pos-animation-' + cardIndex);
+
+            if (show.getAttribute('direction') != 'reverse') {
+                dealPos.setAttribute('direction', 'reverse');
+                dealRot.setAttribute('direction', 'reverse');
+                show.setAttribute('direction', 'reverse');
+                // dealPos.setAttribute('fill', 'backwards');
+                // dealRot.setAttribute('fill', 'backwards');
+                // show.setAttribute('fill', 'backwards');
+            }
+            else {
+                dealPos.setAttribute('direction', 'normal');
+                dealRot.setAttribute('direction', 'normal');
+                show.setAttribute('direction', 'normal');
+                // dealPos.setAttribute('fill', 'forward');
+                // dealRot.setAttribute('fill', 'forward');
+                // show.setAttribute('fill', 'forward');
+            }
+
+
+
         }
+
     });
 
     AFRAME.registerComponent('number-picker', {

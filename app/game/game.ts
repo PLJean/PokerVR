@@ -45,7 +45,7 @@ export class Player {
             this.potAmount += amount;
             this.cash -= amount;
         }
-        this.state.action = [1, null];
+        this.state.action = [1, amount];
         this.stateHasChanged = true;
     }
 
@@ -83,10 +83,10 @@ export class Player {
         this.potAmount = 0;
         this.folded = false;
         this.state.action = null;
-        this.hand.clear();
         if (deck != null) {
             deck.addCards(this.hand);
         }
+        this.hand.clear();
         this.stateHasChanged = true;
     }
 
@@ -132,6 +132,7 @@ export class Player {
 }
 
 export class Game {
+    protected turnNumber = 0;
     protected players: Player[] = [];
     protected state = {};
     protected stateChanged: boolean = false;

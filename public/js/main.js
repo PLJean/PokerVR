@@ -1,2 +1,5 @@
 let room = require('./room.js');
-room();
+window.onload = function() {
+    room();
+
+};

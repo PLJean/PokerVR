@@ -7,6 +7,7 @@ export class Client {
     stateChanges = [];
     players = null;
     ons = {};
+    id = 0;
 
     constructor() {
         let self = this;
@@ -18,8 +19,10 @@ export class Client {
         this.socket.on('updateState', function(data) {
             console.log("Updating State....");
             // TODO Make stateChanges a Set so there is no overlap when processingStateChanges
+            self.id = data.id;
             self.stateChanges = self.stateChanges.concat(data.changes);
             self.updateStates(data.changes);
+            console.log(data.changes);
         });
     }
 
@@ -75,6 +78,10 @@ export class Client {
 
     public on(stateChange, fn) {
         this.ons[stateChange] = fn;
+    }
+
+    public emit(stateChange) {
+
     }
 
     public processStateChanges() {
