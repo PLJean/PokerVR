@@ -38,7 +38,7 @@ let gameSkip = function(game) {
 app.use(express.static('public/'));
 app.use('app/', express.static('/app/clients/client.js'));
 
-app.get('/', function(req, res) {
+app.get('/pokerVR', function(req, res) {
     res.sendFile('game.html', {'root': __dirname + '/public'});
 });
 
