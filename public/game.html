@@ -86,8 +86,32 @@
 
                 <a-entity id="table" dealer obj-model="obj: #poker-table-obj; mtl: #poker-table-mtl">
                     <a-entity id="chairs">
-                        <a-entity id="chair-0" seat="0" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="0 0 4.563"       rotation="0 0 0"  ></a-entity>
-                        <a-entity id="chair-1" seat="1" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="4 0 2.539"      rotation="0 60 0" ></a-entity>
+                        <a-entity id="chair-0" seat="0" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="0 0 4.563"       rotation="0 0 0"  >
+                            <a-entity id="head-0" position="0 1.4 0" rotation="0 0 0" visible="false"
+                                      animation="property: rotation;">
+                                <a-sphere scale="0.5 0.5 0.5" random-color>
+                                    <a-sphere position="0.365 0.6 -0.7" scale="0.2 0.2 0.2" color="white">
+                                        <a-sphere position="0 0 -0.9" scale="0.25 0.25 0.25" color="black"></a-sphere>
+                                    </a-sphere>
+                                    <a-sphere position="-0.365 0.6 -0.7" scale="0.2 0.2 0.2" color:="white">
+                                        <a-sphere position="0 0 -0.9" scale="0.25 0.25 0.25" color="black"></a-sphere>
+                                    </a-sphere>
+                                </a-sphere>
+                            </a-entity>
+                        </a-entity>
+                        <a-entity id="chair-1" seat="1" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="4 0 2.539"      rotation="0 60 0" >
+                            <a-entity id="head-1" position="0 1.4 0" rotation="0 0 0" visible="false"
+                                      animation="property: rotation;">
+                                <a-sphere scale="0.5 0.5 0.5" random-color>
+                                    <a-sphere position="0.365 0.6 -0.7" scale="0.2 0.2 0.2" color="white">
+                                        <a-sphere position="0 0 -0.9" scale="0.25 0.25 0.25" color="black"></a-sphere>
+                                    </a-sphere>
+                                    <a-sphere position="-0.365 0.6 -0.7" scale="0.2 0.2 0.2" color:="white">
+                                        <a-sphere position="0 0 -0.9" scale="0.25 0.25 0.25" color="black"></a-sphere>
+                                    </a-sphere>
+                                </a-sphere>
+                            </a-entity>
+                        </a-entity>
                         <a-entity id="chair-2" seat="2" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="4.035 0 -2.515" rotation="0 120 0"></a-entity>
                         <a-entity id="chair-3" seat="3" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="0 0 -4.563"      rotation="0 180 0"></a-entity>
                         <a-entity id="chair-4" seat="4" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="-4 0 -2.539"      rotation="0 240 0"></a-entity>
@@ -251,9 +275,7 @@
                     </a-entity>
 
 
-                    <a-entity id="head-0" head="0">
-                        <a-sphere></a-sphere>
-                    </a-entity>
+
 
                     <a-entity id="deck" deck position="0 0.167 0" rotation="90 90 0">
                         <a-entity id="deck-quarter" geometry="primitive: box; width: 0.35; height: 0.5; depth: 0.012" material="color: white;" position="0 0 -0.024" scale="1 1 1">
@@ -405,7 +427,7 @@
                 </a-entity>
             </a-entity>
 
-            <a-camera id="player" position="9.76 0 17.5" rotation="0 0 0" wasd-controls-enabled="false">
+            <a-camera id="player" player-track position="9.76 0 17.5" rotation="0 0 0" wasd-controls-enabled="false">
                 <a-entity id="cursor" cursor raycaster="objects: .clickable" position="0 0 -1" geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.015" material="color: red;"></a-entity>\
             </a-camera>
 

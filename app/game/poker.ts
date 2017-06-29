@@ -279,6 +279,9 @@ export class Poker extends Game {
             stage: 0
         };
 
+        for (let i = 0; i < this.players.length; i++) {
+            this.updateState('player')
+        }
         this.defaultMinimumBet = Math.trunc(this.config.minimum / 10);
         this.minimumBet = this.defaultMinimumBet;
    }

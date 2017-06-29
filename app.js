@@ -42,8 +42,8 @@ app.get('/', function(req, res) {
     res.sendFile('game.html', {'root': __dirname + '/public'});
 });
 
-gameServer.listen(3000, function () {
-    console.log("Listening at :3000")
+gameServer.listen(80, function () {
+    console.log("Listening at :80")
 });
 
 consoleInit();

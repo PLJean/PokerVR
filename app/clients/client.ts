@@ -121,6 +121,7 @@ export class PokerClient extends Client {
     hand = null;
     seat = null;
     rooms = null;
+    rotations = []
 
     constructor() {
         super();
@@ -145,6 +146,14 @@ export class PokerClient extends Client {
             // console.log(data['rooms']);
             client.setRooms(data['rooms']);
         });
+
+        this.socket.on('rotations', function(data) {
+
+        });
+    }
+
+    public sendRotation(rot) {
+        this.socket.emit('rotation', {x: rot.x, y: rot.y, z: rot.z});
     }
 
     public requestRooms() {

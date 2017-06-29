@@ -185,8 +185,11 @@ export class GameServer {
                 }
             });
 
-            socket.on('action', function() {
-
+            socket.on('rotation', function(data) {
+                let room = server.getRoom(socketRoom(socket));
+                let player = room.game.getPlayerByData('socketid', socket.id);
+                let seatNumber = player.get('seatNumber');
+                room.game.updateState('rotation.' + seatNumber, {x: data.x, y: data.y, z: data.z});
             })
         });
     }
@@ -200,42 +203,48 @@ export class GameServer {
         var loop = function () {
             let roomKeys = Object.keys(rooms);
             for (let roomID in rooms) {
-                let room = rooms[roomID];
+                try {
+                    let room = rooms[roomID];
 
-                if (roomID != 'lobby' && room) {
-                    if (room.game.isPaused()) {
-                        let timeLeft = ((server.pausedRooms[room][0] - new Date().getTime()));
-                        if (timeLeft > 0) {
+                    if (roomID != 'lobby' && room) {
+                        if (room.game.isPaused()) {
+                            let timeLeft = ((server.pausedRooms[room][0] - new Date().getTime()));
+                            if (timeLeft > 0) {
 
-                        } else {
-                            console.log("Game starting!");
-                            room.game.paused = false;
-                            room.game.playing = true;
-                            room.game.updateState('messages', ['Game is starting!']);
-                            delete server.pausedRooms[room];
+                            } else {
+                                console.log("Game starting!");
+                                room.game.paused = false;
+                                room.game.playing = true;
+                                room.game.updateState('messages', ['Game is starting!']);
+                                delete server.pausedRooms[room];
+                            }
                         }
-                    }
 
-                    else if (room.game.inPlay()) {
-                        if (server.oldStage != room.game.stage) {
-                            server.oldStage = room.game.stage;
+                        else if (room.game.inPlay()) {
+                            if (server.oldStage != room.game.stage) {
+                                server.oldStage = room.game.stage;
+                            }
                         }
-                    }
 
-                    else if (room.game.isBeforePlay()) {
-                        // console.log('Before Play');
-                        server.pausedRooms[room] = [new Date().getTime() + pauseTime, pauseTime];
-                        server.sendPause(room, 5);
-                        room.game.beforePlaying = false;
-                        room.game.paused = true;
-                    }
+                        else if (room.game.isBeforePlay()) {
+                            // console.log('Before Play');
+                            server.pausedRooms[room] = [new Date().getTime() + pauseTime, pauseTime];
+                            server.sendPause(room, 5);
+                            room.game.beforePlaying = false;
+                            room.game.paused = true;
+                        }
 
-                    room.game.dealer();
+                        room.game.dealer();
 
-                    if (room.game && room.game.hasNewState()) {
-                        server.sendGameStates(room, ++gameStateCount);
+                        if (room.game && room.game.hasNewState()) {
+                            server.sendGameStates(room, ++gameStateCount);
+                        }
                     }
                 }
+                catch(e) {
+                    console.log(e);
+                }
+
             }
 
             again();
@@ -249,7 +258,8 @@ export class GameServer {
     }
 
     private sendPause(room, length) {
-        console.log("Game starts in " + length + " seconds");
+        // console.log("Game starts in " + length + " seconds");
+        // room.game.addMessage("Game starts in " + length + " seconds");
         for (let i = 0; i < room.game.players.length; i++) {
             let player = room.game.players[i];
             if (player != null) {
