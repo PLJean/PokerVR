@@ -269,19 +269,25 @@ export class Poker extends Game {
         }
 
         // this.callbacks['statechange'] = function() {};
-        this.state = {
-            game: 'Poker',
-            playing: false,
-            players: {
+        // this.state = {
+        //     game: 'Poker',
+        //     playing: false,
+        //     players: {
+        //
+        //     },
+        //     dealt: [],
+        //     stage: 0
+        // };
 
-            },
-            dealt: [],
-            stage: 0
-        };
+        this.updateState('game', 'Poker');
+        this.updateState('playing', false);
+        this.updateState('dealt', []);
+        this.updateState('stage', 0);
 
         for (let i = 0; i < this.players.length; i++) {
-            this.updateState('player')
+            this.updateState('player.' + i, null)
         }
+
         this.defaultMinimumBet = Math.trunc(this.config.minimum / 10);
         this.minimumBet = this.defaultMinimumBet;
    }
@@ -392,11 +398,11 @@ export class Poker extends Game {
         this.players[seatNumber].set("seatNumber", seatNumber);
 
         // Update state
-        // this.updateState('players.' + seatNumber.toString(), {});
         this.addMessage('Player has joined on seat ' + seatNumber);
 
         this.playerCount += 1;
         this.players[seatNumber].sitToggle();
+        this.stateChanged = true;
         return true;
     }
 

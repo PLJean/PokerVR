@@ -88,7 +88,7 @@
                     <a-entity id="chairs">
                         <a-entity id="chair-0" seat="0" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="0 0 4.563"       rotation="0 0 0"  >
                             <a-entity id="head-0" position="0 1.4 0" rotation="0 0 0" visible="false"
-                                      animation="property: rotation;">
+                                      animation="property: rotation; startEvents: turnHead; to: 90 90 90">
                                 <a-sphere scale="0.5 0.5 0.5" random-color>
                                     <a-sphere position="0.365 0.6 -0.7" scale="0.2 0.2 0.2" color="white">
                                         <a-sphere position="0 0 -0.9" scale="0.25 0.25 0.25" color="black"></a-sphere>
@@ -101,7 +101,7 @@
                         </a-entity>
                         <a-entity id="chair-1" seat="1" obj-model="obj: #poker-chair-obj; mtl: #poker-chair-mtl" position="4 0 2.539"      rotation="0 60 0" >
                             <a-entity id="head-1" position="0 1.4 0" rotation="0 0 0" visible="false"
-                                      animation="property: rotation;">
+                                      animation="property: rotation; startEvents: turnHead;">
                                 <a-sphere scale="0.5 0.5 0.5" random-color>
                                     <a-sphere position="0.365 0.6 -0.7" scale="0.2 0.2 0.2" color="white">
                                         <a-sphere position="0 0 -0.9" scale="0.25 0.25 0.25" color="black"></a-sphere>

@@ -1,6 +1,8 @@
 require('aframe');
 require('aframe-animation-component');
+var d3 = require('d3-interpolate');
 var client = require('../../app/clients/client.js');
+
 
 
 function stringToVector(string) {
@@ -23,13 +25,6 @@ function Room () {
     var uvMaxVector = new THREE.Vector2();
     var uvScaleVector = new THREE.Vector2();
 
-    AFRAME.registerComponent('random-color', {
-        dependencies: ['material'],
-        init: function () {
-            // Set material component's color property to a random color.
-            this.el.setAttribute('material', 'color', getRandomColor());
-        }
-    });
     function getRandomColor() {
         const letters = '0123456789ABCDEF';
         var color = '#';
@@ -38,6 +33,14 @@ function Room () {
         }
         return color;
     }
+
+    AFRAME.registerComponent('random-color', {
+        dependencies: ['material'],
+        init: function () {
+            // Set material component's color property to a random color.
+            this.el.setAttribute('material', 'color', getRandomColor());
+        }
+    });
 
     AFRAME.registerGeometry('triangle', {
         schema: {
@@ -109,32 +112,53 @@ function Room () {
             type: 'number'
         },
         rotations: {},
+        startHead: {x: 0, y: 0, z: 0},
+        endHead: {x: 0, y: 0, z: 0},
+        interpolation: null,
+        animationStep: 0,
+        animationDur: 1,
+        animationStart: 0,
+        animationEnd: 0,
         init: function () {
-            let self = this;
-            let seatNumber = this.data;
-            poker.on('rotation\.' + this.data, function() {
-                console.log('rotation received.');
-                let playerRotations = poker.state['rotation'];
-                console.log(playerRotations);
-                for (let seat in playerRotations) {
-                    let rotation = playerRotations[seat];
 
-                    if ( !(seat in self.rotations)) {
-                        console.log('does not exist');
-                        self.rotations[seat] = rotation;
-                    } else if (self.rotations[seat] == rotation) {
-                        console.log('just a repeat');
-                        continue;
-                    }
+        },
+        animateHead(start, end) {
+            this.startHead = start;
+            this.endHead = end;
+            this.interpolation = {
+                x: d3.interpolate(start.x, end.x),
+                y: d3.interpolate(start.y, end.y),
+                z: d3.interpolate(start.z, end.z)
+            };
 
-                    console.log('is gud');
+            this.animationStart = new Date().getTime() / 1000;
+            this.animationEnd = this.animationStart + 1;
+        },
+        tick: function() {
+            if(this.interpolation) {
+                this.animate();
+            }
+        },
+        animate: function() {
+            console.log('animating');
+            let head = document.querySelector('#head-' + this.data);
+            let elapsed = (new Date().getTime() / 1000) - this.animationStart;
+            console.log(elapsed);
+            if (elapsed > this.animationDur) {
+                console.log('end');
+                this.interpolation = null;
+            }
 
-                    let head = document.querySelector('#head-' + seat);
-                    let offsetRotation = document.querySelector('#chair-' + seat).getAttribute('rotation');
-                    head.setAttribute('rotation', new THREE.Vector3(rotation.x - offsetRotation.x, rotation.y - offsetRotation.y, rotation.z - offsetRotation.z));
-                }
+            else {
+                let ratio = elapsed / this.animationDur;
+                console.log(ratio);
+                head.setAttribute('rotation', new THREE.Vector3(
+                    this.interpolation.x(ratio),
+                    this.interpolation.y(ratio),
+                    this.interpolation.z(ratio)
+                ))
+            }
 
-            });
         },
         sitDown() {
             let player = document.querySelector('#player');
@@ -157,40 +181,6 @@ function Room () {
 
         }
     });
-
-    // AFRAME.registerComponent('deck', {
-    //    animatedCards: [],
-    //    init: function() {
-    //        var cardMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff , side: THREE.DoubleSide});
-    //        var cardGeometry = new THREE.PlaneGeometry(1, 1);
-    //
-    //        cardGeometry.applyMatrix( new THREE.Matrix4().makeTranslation(0, 0.5, 0 ) );
-    //
-    //        for (let i = 0; i < 4; i++) {
-    //            var canvas = document.createElement('canvas');
-    //            var ctx = canvas.getContext("2d");
-    //            var cardMesh;
-    //            canvas.width = 250;
-    //            canvas.height = 350;
-    //
-    //            // Fill background
-    //            ctx.fillStyle = 'white';
-    //            ctx.fillRect(0, 0, canvas.width, canvas.height);
-    //
-    //            // Fill inner layer
-    //            ctx.fillStyle = 'red';
-    //            ctx.fillRect(25, 35, canvas.width - 25 * 2, canvas.height - 35 * 2);
-    //
-    //            cardMaterial.map = new THREE.Texture(canvas);
-    //            cardMaterial.map.needsUpdate = true;
-    //            cardMesh = new THREE.Mesh(cardGeometry, cardMaterial);
-    //            this.animatedCards.push(cardMesh);
-    //            this.el.setObject3D('mesh', cardMesh);
-    //        }
-    //
-    //
-    //    }
-    // });
 
     AFRAME.registerComponent('card', {
         schema: {
@@ -570,11 +560,12 @@ function Room () {
         turn: null,
         dealt: [],
         currentTurnNumber: 0,
-    messages: [['', 'white', ], ['', 'white'], ['', 'white'], ['', 'white'], ['', 'white']],
+        messages: [['', 'white', ], ['', 'white'], ['', 'white'], ['', 'white'], ['', 'white']],
         init: function() {
-            let dealer = this;
-            let dealtNumber = 0;
-            let handNumber =  0;
+            var dealer = this;
+            var dealtNumber = 0;
+            var handNumber =  0;
+            var rotateTo = null;
             // let currentTurnNumber = 0;
             function addMessages(newMessages, colors) {
                 for (let i = 0; i < newMessages.length; i++) {
@@ -601,36 +592,40 @@ function Room () {
             poker.on('players\.\\d+', function() {
                 let players = poker.state['players'];
                 for (let playerSeat in players) {
-                    let cardSpawn = document.querySelector('#card-spawn-' + playerSeat.toString());
-                    let cash = poker.state.players[playerSeat].cash;
-                    let playerChips = document.querySelector('#chips-' + playerSeat.toString());
-                    let playerChipText = document.querySelector('#chips-value-' + playerSeat.toString());
-                    let playerHead = document.querySelector('#head-' + playerSeat.toString());
-                    if (cardSpawn) {
-                        playerChips.components['chips'].setAmount(cash);
-                        playerChipText.setAttribute('text', {
-                            value: cash.toString(),
-                            align: 'center',
-                            width: 2.5
-                        });
-                        cardSpawn.setAttribute('visible', true);
-                        playerChips.setAttribute('visible', true);
-                        if (playerSeat != dealer.data.seat) {
-                            playerHead.setAttribute('visible', true);
+                    if (players[playerSeat]) {
+                        let cardSpawn = document.querySelector('#card-spawn-' + playerSeat.toString());
+                        let cash = poker.state.players[playerSeat].cash;
+                        let playerChips = document.querySelector('#chips-' + playerSeat.toString());
+                        let playerChipText = document.querySelector('#chips-value-' + playerSeat.toString());
+                        let playerHead = document.querySelector('#head-' + playerSeat.toString());
+                        if (cardSpawn) {
+                            playerChips.components['chips'].setAmount(cash);
+                            playerChipText.setAttribute('text', {
+                                value: cash.toString(),
+                                align: 'center',
+                                width: 2.5
+                            });
+                            cardSpawn.setAttribute('visible', true);
+                            playerChips.setAttribute('visible', true);
+                            if (playerSeat != dealer.data.seat) {
+                                playerHead.setAttribute('visible', true);
 
+                            }
+                        }
+                    }
+
+                    else {
+                        let cardSpawn = document.querySelector('#card-spawn-' + playerSeat.toString());
+                        let playerChips = document.querySelector('#chips-' + playerSeat.toString());
+                        let playerHead = document.querySelector('#head-' + playerSeat.toString());
+                        if (cardSpawn) {
+                            cardSpawn.setAttribute('visible', false);
+                            playerChips.setAttribute('visible', false);
+                            playerHead.setAttribute('visible', false);
                         }
                     }
                 }
             });
-
-            // poker.on('players\.\\d+\.rotation', function() {
-            //     let players = poker.state['players'];
-            //     for (let playerSeat in players) {
-            //         let playerHead = document.querySelector('#head-' + playerSeat.toString());
-            //         let playerHeadAnimation = document.querySelector('#head-animation-' + playerSeat.toString());
-            //         playerHeadAnimation.setAttribute('from', )
-            //     }
-            // });
 
             poker.on('seat', function() {
                 console.log("hasChanged() - Seat has changed");
@@ -752,6 +747,25 @@ function Room () {
                     addMessages(['Player ' + turn + '\'s turn'], ['white'])
                 }
             });
+
+            let self = this;
+            let seatNumber = this.data;
+            for (let i = 0; i < 6; i++) {
+                poker.on('rotation\.' + i, function() {
+                    console.log('rotation received.');
+                    let playerRotations = poker.state['rotation'];
+                    console.log(playerRotations);
+                    let rotation = playerRotations[i];
+                    if (rotation && rotation != rotateTo) {
+                        let head = document.querySelector('#head-' + i);
+                        let chair = document.querySelector('#chair-' + i);
+                        let offsetRotation = chair.getAttribute('rotation');
+                        chair.components.seat.animateHead(head.getAttribute('rotation'),
+                            {x: rotation.x - offsetRotation.x, y: rotation.y - offsetRotation.y, z: rotation.z - offsetRotation.z});
+                    }
+                });
+            }
+
         },
         tick: function() {
             // if (poker.hasChanged()) {

@@ -100,6 +100,8 @@ export class GameServer {
                 delete server.idMap[socket.id];
                 // console.log(socket);
                 let room = server.getRoom(socketRoom(socket));
+                if (!room) return;
+
                 if (room && room.hasOwnProperty('game'))
                     room.game.removePlayer(room.game.getPlayerByData('socketid', socket.id));
             });
@@ -115,6 +117,8 @@ export class GameServer {
                 }
 
                 let room = server.getRoom('poker-' + data.room);
+                if (!room) return;
+
                 server.idMap[socket.id] = room;
                 // TODO Check database to see if player has money.
                 let availableSeat = room.game.getSeat();
@@ -140,6 +144,8 @@ export class GameServer {
 
             socket.on('leave', function () {
                 let room = server.getRoom(socket.rooms[1]);
+                if (!room) return;
+
                 room.game.removePlayer(room.game.getPlayerByData('socketid', socket.id));
             });
 
@@ -163,6 +169,7 @@ export class GameServer {
                 money = money.money;
 
                 let room = server.getRoom(socketRoom(socket));
+                if (!room) return;
 
                 let player = room.game.getPlayerByData('socketid', socket.id);
                 if (room.game.playerBet(player, money)) {
@@ -176,6 +183,7 @@ export class GameServer {
 
             socket.on('call', function() {
                 let room = server.getRoom(socketRoom(socket));
+                if (!room) return;
 
                 let player = room.game.getPlayerByData('socketid', socket.id);
                 if (room.game.playerCall(player)) {
@@ -187,7 +195,10 @@ export class GameServer {
 
             socket.on('rotation', function(data) {
                 let room = server.getRoom(socketRoom(socket));
+                if (!room || !room.game) return;
+
                 let player = room.game.getPlayerByData('socketid', socket.id);
+
                 let seatNumber = player.get('seatNumber');
                 room.game.updateState('rotation.' + seatNumber, {x: data.x, y: data.y, z: data.z});
             })
