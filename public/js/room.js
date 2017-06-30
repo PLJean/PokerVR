@@ -177,8 +177,6 @@ function Room () {
             announcements.setAttribute('rotation', new THREE.Vector3(rotation.x, rotation.y, rotation.z));
             chips.setAttribute('visible', true);
             tracker.setAttribute('player-track', {state: 1});
-
-
         }
     });
 
@@ -389,6 +387,8 @@ function Room () {
             poker.requestRooms();
         },
         updateRoomList: function(rooms) {
+            console.log('room list');
+            console.log(rooms);
             let roomKeys;
             if (rooms) {
                 roomKeys = Object.keys(rooms);
@@ -1171,6 +1171,8 @@ function Room () {
                 if (i + 1 < this.data.values.length)
                     startX += width/2 + (parseInt(this.data.widths[i + 1])/2 + this.data.borderWidth/2);
             }
+
+            poker.on('')
         },
         createButton: function(x, w, h, text, fn) {
             let position = this.el.getAttribute('position');

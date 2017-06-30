@@ -116,7 +116,7 @@ export class Player {
     getState() {
         // console.log(this.cash);
         this.state['cash'] = this.cash;
-        this.state['minimumBet'] = this.playerInfo['minimumBet'];
+        // this.state['minimumBet'] = this.playerInfo['minimumBet'];
         // console.log(this.state);
         this.stateHasChanged = false;
         return this.state;
@@ -205,5 +205,27 @@ export class Game {
 
         this.stateChanges.push([key, value]);
         this.stateChanged = true;
+    }
+
+    public getState(key) {
+        if (!key) return;
+
+        let keys = key.split('.');
+        if (keys.length != 0) {
+            let object = this.state;
+            for (let i = 0; i < keys.length; i++) {
+                if (object[keys[i]] == null) {
+                    return null;
+                }
+
+                else if (i == keys.length - 1) {
+                    return object[keys[i]];
+                }
+
+                object = object[keys[i]];
+            }
+        }
+
+        return null;
     }
 }

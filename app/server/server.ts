@@ -45,13 +45,15 @@ export class GameServer {
                 // console.log(this.rooms[room]);
                 let game = this.rooms[room].game;
                 // console.log("playerCount: " + game.getConfig('playerCount'));
+                console.log(game.state['minimum']);
+                console.log();
                 returnData[room] = {
                     game: 'Poker',
-                    type: game.getConfig('type'),
-                    minimum: game.getConfig('minimum'),
-                    maximum: game.getConfig('maximum'),
-                    playerCount: game.playerCount,
-                    maxPlayerCount: game.getConfig('maxPlayers')
+                    type: game.getState('type'),
+                    minimum: game.getState('minimum').toString(),
+                    maximum: game.getState('maximum'),
+                    playerCount: game.getState('playerCount'),
+                    maxPlayerCount: game.getState('maxPlayerCount')
                 };
             }
         }
@@ -73,6 +75,15 @@ export class GameServer {
         } else {
             this.rooms[name] = {game: game};
         }
+    }
+
+    loadFromState(state) {
+
+    }
+
+    saveState(game) {
+        let json = JSON.stringify(game.state);
+        fs.writeFile('')
     }
 
     initIO () {
@@ -98,12 +109,11 @@ export class GameServer {
             socket.on('disconnecting', function() {
                 console.log('Player ' + socket.id + ' has left the room.');
                 delete server.idMap[socket.id];
-                // console.log(socket);
                 let room = server.getRoom(socketRoom(socket));
                 if (!room) return;
 
-                if (room && room.hasOwnProperty('game'))
-                    room.game.removePlayer(room.game.getPlayerByData('socketid', socket.id));
+                // if (room && room.hasOwnProperty('game'))
+                //     room.game.removePlayer(room.game.getPlayerByData('socketid', socket.id));
             });
 
             socket.on('join', function(data) {
