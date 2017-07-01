@@ -83,7 +83,7 @@ export class GameServer {
 
     saveState(game) {
         let json = JSON.stringify(game.state);
-        fs.writeFile('')
+        // fs.writeFile('')
     }
 
     initIO () {
@@ -154,13 +154,15 @@ export class GameServer {
 
             socket.on('leave', function () {
                 let room = server.getRoom(socket.rooms[1]);
-                if (!room) return;
+                if (!room || !room.game) return;
 
                 room.game.removePlayer(room.game.getPlayerByData('socketid', socket.id));
             });
 
             socket.on('fold', function () {
                 let room = server.getRoom(socketRoom(socket));
+                if (!room || !room.game) return;
+
                 let player = room.game.getPlayerByData('socketid', socket.id);
                 if (player && room.game.playerFold(player)) {
                     console.log("Player " + socket.id + " has folded");
@@ -179,7 +181,7 @@ export class GameServer {
                 money = money.money;
 
                 let room = server.getRoom(socketRoom(socket));
-                if (!room) return;
+                if (!room || !room.game) return;
 
                 let player = room.game.getPlayerByData('socketid', socket.id);
                 if (room.game.playerBet(player, money)) {
@@ -193,7 +195,7 @@ export class GameServer {
 
             socket.on('call', function() {
                 let room = server.getRoom(socketRoom(socket));
-                if (!room) return;
+                if (!room || !room.game) return;
 
                 let player = room.game.getPlayerByData('socketid', socket.id);
                 if (room.game.playerCall(player)) {

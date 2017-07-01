@@ -185,6 +185,7 @@ export class Game {
     }
 
     public updateState(key, value) {
+        console.log('updating ' + key);
         if (!key) return;
 
         let keys = key.split('.');

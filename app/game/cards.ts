@@ -29,7 +29,7 @@ export class Cards {
         return ret;
     }
 
-    length(): number {
+    get length(): number {
         return this.cardList.length;
     }
 

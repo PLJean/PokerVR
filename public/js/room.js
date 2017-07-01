@@ -553,14 +553,15 @@ function Room () {
 
     AFRAME.registerComponent('dealer', {
         schema: {
-            seat: {type: 'number', default: -1}
+            seat: {type: 'number'}
         },
         card0: null,
         card1: null,
         turn: null,
         dealt: [],
         currentTurnNumber: 0,
-        messages: [['', 'white', ], ['', 'white'], ['', 'white'], ['', 'white'], ['', 'white']],
+        messages: [['', 'white', 0], ['', 'white', 0], ['', 'white', 0], ['', 'white', 0], ['', 'white', 0]],
+        messageLimit: 15,
         init: function() {
             var dealer = this;
             var dealtNumber = 0;
@@ -571,16 +572,16 @@ function Room () {
                 for (let i = 0; i < newMessages.length; i++) {
                     dealer.messages.pop();
                     let color = colors && i < colors.length ? colors[i] : 'white';
-                    dealer.messages.unshift([newMessages[i], color]);
+                    let time = new Date().getTime() / 1000;
+                    dealer.messages.unshift([newMessages[i], color, time + 15]);
                 }
-
 
                 for (let j = 0; j < dealer.messages.length; j++) {
                     let announcement = document.querySelector('#announcement-' + j);
                     let message = dealer.messages[j][0];
                     let color = dealer.messages[j][1];
                     announcement.setAttribute('text', {
-                        opacity: j != 4 ? 1 : 0.5,
+                        opacity: 1.0,
                         width: 5,
                         align: 'center',
                         value: message,
@@ -599,14 +600,17 @@ function Room () {
                         let playerChipText = document.querySelector('#chips-value-' + playerSeat.toString());
                         let playerHead = document.querySelector('#head-' + playerSeat.toString());
                         if (cardSpawn) {
-                            playerChips.components['chips'].setAmount(cash);
-                            playerChipText.setAttribute('text', {
-                                value: cash.toString(),
-                                align: 'center',
-                                width: 2.5
-                            });
+                            if (cash != playerChips.getAttribute('value')) {
+                                playerChips.components['chips'].setAmount(cash);
+                                playerChipText.setAttribute('text', {
+                                    value: cash.toString(),
+                                    align: 'center',
+                                    width: 2.5
+                                });
+                                playerChips.setAttribute('visible', true);
+                            }
+
                             cardSpawn.setAttribute('visible', true);
-                            playerChips.setAttribute('visible', true);
                             if (playerSeat != dealer.data.seat) {
                                 playerHead.setAttribute('visible', true);
 
@@ -629,8 +633,6 @@ function Room () {
 
             poker.on('seat', function() {
                 console.log("hasChanged() - Seat has changed");
-                if (dealer.data.seat != -1) return;
-
                 let seat = poker.state['seat'];
                 let chair = document.querySelector('#chair-' + seat.toString()).components.seat;
 
@@ -748,15 +750,16 @@ function Room () {
                 }
             });
 
-            let self = this;
-            let seatNumber = this.data;
-            for (let i = 0; i < 6; i++) {
+             let seatNumber = this.data.seat;
+             for (let i = 0; i < 6; i++) {
+                if (i == seatNumber) continue;
+
                 poker.on('rotation\.' + i, function() {
                     console.log('rotation received.');
                     let playerRotations = poker.state['rotation'];
                     console.log(playerRotations);
                     let rotation = playerRotations[i];
-                    if (rotation && rotation != rotateTo) {
+                    if (rotation) {
                         let head = document.querySelector('#head-' + i);
                         let chair = document.querySelector('#chair-' + i);
                         let offsetRotation = chair.getAttribute('rotation');
@@ -764,13 +767,38 @@ function Room () {
                             {x: rotation.x - offsetRotation.x, y: rotation.y - offsetRotation.y, z: rotation.z - offsetRotation.z});
                     }
                 });
-            }
+             }
 
         },
         tick: function() {
-            // if (poker.hasChanged()) {
-                // console.log(poker.state);
-            // }
+            for (let i = this.messages.length - 1; i >= 0 ; i--) {
+                let announcement = document.querySelector('#announcement-' + i);
+                if (announcement.getAttribute('text').opacity == 0) continue;
+
+                let message = this.messages[i][0];
+                let color = this.messages[i][1];
+                let timeLeft = this.messages[i][2] - (new Date().getTime() / 1000);
+                if (timeLeft < 0) {
+                    announcement.setAttribute('text', {
+                        opacity: 0,
+                        width: 5,
+                        align: 'center',
+                        value: message,
+                        color: color
+                    });
+                }
+
+                else if (timeLeft < 3) {
+                    let announcement = document.querySelector('#announcement-' + i);
+                    announcement.setAttribute('text', {
+                        opacity: timeLeft / 3,
+                        width: 5,
+                        align: 'center',
+                        value: message,
+                        color: color
+                    });
+                }
+            }
             poker.processStateChanges();
         },
         update: function() {
@@ -1103,7 +1131,6 @@ function Room () {
         }
     });
 
-
     AFRAME.registerComponent('button',{
         schema: {
             press: {type: 'string', default: ''},
@@ -1337,6 +1364,7 @@ function Room () {
 
         },
         generateChips(r, h) {
+            console.log('generating chips');
             let val = this.el.getAttribute('value');
             if (!val) return;
 
@@ -1361,7 +1389,6 @@ function Room () {
                 for (let i = 0; i < chip.count; i++) {
                     let geometry = new THREE.CylinderGeometry(r, r, h, 16);
                     let numberOfSides = geometry.faces.length;
-                    console.log("number of sides: " + numberOfSides);
                     let blacked = true;
                     let countTwo = 0;
                     for (let j = 0; j < numberOfSides / 2; j++) {
@@ -1407,6 +1434,7 @@ function Room () {
             }
         },
         setAmount: function(x) {
+            console.log("setAmount");
             this.el.setAttribute('value', x);
             this.generateChips(0.1, 0.025);
         }

@@ -238,6 +238,9 @@ export class Poker extends Game {
     private forceNextStage = false;
     // private playerCount = 0;
     private activePlayerCount = 0;
+    private turnStartTime = 0;
+    private turnEndTime = 0;
+    private turnLength = 30;
     // private totalPot = 0;
 
     private ons = {
@@ -333,7 +336,6 @@ export class Poker extends Game {
 
     getPlayerCount() {
         return this.getState('playerCount');
-       // return this.playerCount;
    }
 
     playerBet(player, amount) {
@@ -349,7 +351,6 @@ export class Poker extends Game {
                 this.updateState('minimumBet', amount);
             }
             player.bet(amount);
-            // this.totalPot += amount;
             this.updateState('totalPot', this.getState('totalPot') + amount);
             this.addMessage('Player ' + player.get('seatNumber') + ' has bet ' + amount);
 
@@ -372,7 +373,7 @@ export class Poker extends Game {
             else {
                 // this.totalPot += minimumBet;
                 this.updateState('totalPot', this.getState('totalPot') + minimumBet);
-                this.addMessage('Player ' + player.get('seatNumber') + ' has called ' + this.minimumBet);
+                this.addMessage('Player ' + player.get('seatNumber') + ' has called ' + minimumBet);
 
             }
             return true;
@@ -391,8 +392,6 @@ export class Poker extends Game {
 
         return false;
     }
-
-
 
     inTable(playerID) {
         for (let pid in this.players) {
@@ -452,19 +451,41 @@ export class Poker extends Game {
 
         this.updateState('players.' + seatNumber.toString(), null);
         this.addMessage('Player has left ' + seatNumber);
-        // this.playerCount -= 1;
         this.updateState('playerCount', this.getState('playerCount') - 1);
         return true;
     }
 
     resetGame() {
+        this.resetAllPlayers();
+        this.deck.addCards(this.dealt);
+        this.dealt.clear();
         this.stage = 0;
         this.lastStage = 5;
         this.playing = false;
-        for (let i = 0; i < this.players.length; i++) {
-            if (this.players[i] != null) this.players[i].reset(this.deck);
-        }
+        this.beforePlaying = false;
      }
+
+    private resetAllPlayers() {
+        this.activePlayerCount = 0;
+        this.currentPlayerIndex = 0;
+
+        this.updateState('totalPot', 0);
+        for (let i = 0; i < this.players.length; i++) {
+            if (this.players[i] != null) {
+                // this.deck.addCards(this.players[i].hand);
+                this.players[i].reset(this.deck);
+                this.activePlayerCount += 1;
+            }
+        }
+    }
+
+    private resetAllPlayerTurns() {
+        for (let i = 0; i < this.players.length; i++) {
+            if (this.players[i] != null) {
+                this.players[i].resetTurn();
+            }
+        }
+    }
 
     getPlayerBySeat(seatNumber): Player {
         return this.players[seatNumber];
@@ -538,7 +559,6 @@ export class Poker extends Game {
             else if (change in this.ons) {
                 this.ons[change]();
             }
-
         }
 
         this.stateChanges = [];
@@ -550,14 +570,17 @@ export class Poker extends Game {
             this.clearMessages();
         }
 
-        if (this.activePlayerCount == 1) {
+        if (this.playing && this.getState('playerCount') == 1) {
+            this.resetGame();
+        }
+
+        else if (this.activePlayerCount == 1) {
             this.stage = 5;
             this.initStage();
             this.resetAllPlayers();
             this.nextStage();
             console.log(this.activePlayerCount);
         }
-
         else if (!this.tableHasTwo()) {
             this.stage = 0;
             return false;
@@ -595,8 +618,33 @@ export class Poker extends Game {
                     }
                 }
 
+                else {
+                    let timeLeft  = this.turnEndTime - new Date().getTime() / 1000;
+                    // console.log("checking " + timeLeft);
+                    if (timeLeft < 0) {
+                        console.log("Time is done.");
+                        this.automatePlayer(this.currentPlayer(), false);
+                        console.log(this.state);
+                    }
+
+
+                }
+
                 return true;
             }
+        }
+    }
+
+    automatePlayer(player, ai) {
+        if (!ai) {
+            if (this.getState('minimumBet') == 0) {
+                this.playerCall(player);
+            }
+
+            this.playerFold(player);
+        }
+
+        else {
 
         }
     }
@@ -636,6 +684,8 @@ export class Poker extends Game {
 
         this.resetAllPlayerTurns();
         this.currentPlayerIndex = 0;
+        this.turnStartTime = new Date().getTime() / 1000;
+        this.turnEndTime = this.turnStartTime + this.turnLength;
         this.stageInitialized = false;
     }
 
@@ -652,6 +702,8 @@ export class Poker extends Game {
 
         this.currentPlayerIndex = index;
         this.updateState('turn', this.currentPlayerIndex);
+        this.turnStartTime = new Date().getTime() / 1000;
+        this.turnEndTime = this.turnStartTime + this.turnLength;
         // console.log("Player " + this.currentPlayerIndex + " Turn");
     }
 
@@ -928,28 +980,6 @@ export class Poker extends Game {
 
         this.updateState('turn', this.currentPlayerIndex);
         this.updateState('dealt', this.dealt.getCardsArray());
-    }
-
-    private resetAllPlayers() {
-        this.activePlayerCount = 0;
-        this.currentPlayerIndex = 0;
-
-        this.updateState('totalPot', 0);
-        for (let i = 0; i < this.players.length; i++) {
-            if (this.players[i] != null) {
-                // this.deck.addCards(this.players[i].hand);
-                this.players[i].reset(this.deck);
-                this.activePlayerCount += 1;
-            }
-        }
-    }
-
-    private resetAllPlayerTurns() {
-        for (let i = 0; i < this.players.length; i++) {
-            if (this.players[i] != null) {
-                this.players[i].resetTurn();
-            }
-        }
     }
 
     public connect(socket) {
