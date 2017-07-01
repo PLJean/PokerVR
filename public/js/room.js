@@ -92,7 +92,7 @@ function Room () {
             state: {type: 'number', default: 0}
         },
         nextSend: 0,
-        trackInterval: 5,
+        trackInterval: 1,
         tick: function() {
             if (this.data.state != 0) {
                 let time = new Date().getTime() / 1000;
@@ -131,8 +131,14 @@ function Room () {
                 z: d3.interpolate(start.z, end.z)
             };
 
+            let xt = Math.max(0.5, Math.min(1, (end.x - start.x) / 180));
+            let yt = Math.max(0.5, Math.min(1, (end.y - start.y) / 180));
+            let zt = Math.max(0.5, Math.min(1, (end.z - start.z) / 180));
+            let six3 = .333333;
             this.animationStart = new Date().getTime() / 1000;
-            this.animationEnd = this.animationStart + 1;
+            this.animationDur = six3 * xt + six3 * yt + six3 * zt;
+            console.log(this.animationDur);
+            this.animationEnd = this.animationStart + this.animationDur;
         },
         tick: function() {
             if(this.interpolation) {
@@ -140,18 +146,14 @@ function Room () {
             }
         },
         animate: function() {
-            console.log('animating');
             let head = document.querySelector('#head-' + this.data);
             let elapsed = (new Date().getTime() / 1000) - this.animationStart;
-            console.log(elapsed);
             if (elapsed > this.animationDur) {
-                console.log('end');
                 this.interpolation = null;
             }
 
             else {
                 let ratio = elapsed / this.animationDur;
-                console.log(ratio);
                 head.setAttribute('rotation', new THREE.Vector3(
                     this.interpolation.x(ratio),
                     this.interpolation.y(ratio),
@@ -752,7 +754,7 @@ function Room () {
 
              let seatNumber = this.data.seat;
              for (let i = 0; i < 6; i++) {
-                if (i == seatNumber) continue;
+                // if (i == seatNumber) continue;
 
                 poker.on('rotation\.' + i, function() {
                     console.log('rotation received.');
