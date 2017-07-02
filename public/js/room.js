@@ -743,7 +743,7 @@ function Room () {
 
                 if (turn == dealer.data.seat) {
                     controls.setAttribute('visible', true);
-                    addMessages(['Your Turn!'], ['red']);
+                    addMessages(['Your Turn! 30 seconds to make a move.'], ['red']);
                 }
 
                 else {

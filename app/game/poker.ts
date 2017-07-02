@@ -258,7 +258,7 @@ export class Poker extends Game {
         }
     };
 
-    constructor(config = {}) {
+    constructor(config = {}, state = null) {
         super();
         this.loadGameType(config['type'], config);
         for (let i = 0; i < this.config['maxPlayers']; i++) {
@@ -267,21 +267,43 @@ export class Poker extends Game {
         this.defaultMinimumBet = Math.trunc(this.config['minimum'] / 10);
         // this.minimumBet = this.defaultMinimumBet;
 
-        this.updateState('game', 'Poker');
-        this.updateState('type', this.config['type']);
-        this.updateState('minimum', this.config['minimum']);
-        this.updateState('maximum', this.config['maximum']);
-        this.updateState('playerCount', 0);
-        this.updateState('maxPlayerCount', this.config['maxPlayers']);
-        this.updateState('playing', false);
-        this.updateState('dealt', []);
-        this.updateState('stage', 0);
-        this.updateState('minimumBet', Math.trunc(this.config['minimum'] / 10));
+        if (state == null) {
+            console.log('state is null');
+            this.updateState('game', 'Poker');
+            this.updateState('type', this.config['type']);
+            this.updateState('minimum', this.config['minimum']);
+            this.updateState('maximum', this.config['maximum']);
+            this.updateState('playerCount', 0);
+            this.updateState('maxPlayerCount', this.config['maxPlayers']);
+            this.updateState('playing', false);
+            this.updateState('dealt', []);
+            this.updateState('stage', 0);
+            this.updateState('minimumBet', Math.trunc(this.config['minimum'] / 10));
 
-        for (let i = 0; i < this.players.length; i++) {
-            this.updateState('player.' + i, null)
+            for (let i = 0; i < this.players.length; i++) {
+                this.updateState('player.' + i, null)
+            }
+        }
+
+        else {
+            console.log('state not null');
+            this.loadState(state);
         }
    }
+
+    loadState(state) {
+        this.state = state;
+        console.log(state);
+        let playerKeys = Object.keys(state['player']);
+        for (let key in playerKeys) {
+            let playerData = state['player'];
+            console.log(state['player'][key]);
+            // console.log(playerData);
+            console.log('key: ' + key);
+            if (playerData)
+                this.addPlayer(key, playerData)
+        }
+    }
 
     loadGameType(type, options) {
         if (type == 'Pot Limit') {

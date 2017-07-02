@@ -185,7 +185,7 @@ export class Game {
     }
 
     public updateState(key, value) {
-        console.log('updating ' + key);
+        // console.log('updating ' + key);
         if (!key) return;
 
         let keys = key.split('.');
@@ -209,7 +209,7 @@ export class Game {
     }
 
     public getState(key) {
-        if (!key) return;
+        if (!key) return this.state;
 
         let keys = key.split('.');
         if (keys.length != 0) {

@@ -21,7 +21,8 @@ let app = express();
 let server = require('http').Server(app);
 let gameServer = new (require(__dirname + '/app/server/server.js')).GameServer(server);
 let game = function(type, index) {
-    return gameServer.rooms[type + '-' + index].game;
+    let room = gameServer.rooms[type + '-' + index];
+    if (room) return room.game;
 };
 
 let gameSkip = function(game) {

@@ -1,5 +1,6 @@
 import {Poker} from "../game/poker";
 import * as socketIo from "socket.io";
+import * as fs from "file-system";
 
 export class GameServer {
     private io: any;
@@ -9,24 +10,37 @@ export class GameServer {
     handSent = false;
     pausedRooms = {};
     sitters = {};
-    rooms = {
+    rooms = {};
 
-    };
-
-    idMap = {
-
-    };
+    idMap = {};
+    createNewRooms = true;
 
     constructor(server) {
         this.server = server;
         // this.roomMap['lobby'] =
         let gameServer = this;
         this.createRoom('lobby');
-        this.createRoom('poker-0', new Poker());
-        this.createRoom('poker-1', new Poker({type: 'Pot Limit'}));
-        this.createRoom('poker-2', new Poker());
-        this.createRoom('poker-3', new Poker({type: 'Fixed Limit'}));
-        this.createRoom('poker-4', new Poker({type: 'Pot Limit'}));
+
+        let states = this.loadServerState();
+        if (!this.createNewRooms && states && Object.keys(states).length > 0 ) {
+            for (let roomID in states) {
+                console.log('loading ' + roomID);
+                let state = states[roomID];
+                this.createRoom(roomID,
+                    new Poker({type: state['type']}, state)
+                );
+            }
+        }
+
+        else {
+            console.log('creating rooms');
+            this.createRoom('poker-0', new Poker({type: 'No Limit'}));
+            this.createRoom('poker-1', new Poker({type: 'Pot Limit'}));
+            this.createRoom('poker-2', new Poker({type: 'No Limit'}));
+            this.createRoom('poker-3', new Poker({type: 'Fixed Limit'}));
+            this.createRoom('poker-4', new Poker({type: 'Pot Limit'}));
+            this.saveServerState();
+        }
     }
 
     public listen(port, fn) {
@@ -77,13 +91,36 @@ export class GameServer {
         }
     }
 
-    loadFromState(state) {
+    loadServerState() {
+        try {
+            let data = fs.readFileSync(__dirname + '/../../../db/serverStates.json');
+            let states;
+            if (data) {
+                states = JSON.parse(data);
+            }
+            return states;
+        } catch(e) {
+            console.log(e);
+        }
 
+        return null;
     }
 
-    saveState(game) {
-        let json = JSON.stringify(game.state);
-        // fs.writeFile('')
+    saveServerState() {
+        let states = {};
+        for (let roomID in this.rooms) {
+            if (roomID != 'lobby' && this.rooms[roomID].game) {
+                states[roomID] = this.rooms[roomID].game.getState();
+            }
+        }
+
+        let json = JSON.stringify(states);
+        fs.writeFile(__dirname + '/../../../db/serverStates.json', json, function(err) {
+            if (err) {
+                return console.log(err);
+            }
+        });
+        console.log("saving state");
     }
 
     initIO () {
@@ -151,6 +188,12 @@ export class GameServer {
                     socket.emit('join failed', {message: 'Table is full'});
                 }
             });
+
+            // socket.on('rejoin', function() {
+            //     let room = server.getRoom(socket.rooms[1]);
+            //     if (!room || !room.game) return;
+            //
+            // });
 
             socket.on('leave', function () {
                 let room = server.getRoom(socket.rooms[1]);
@@ -223,12 +266,14 @@ export class GameServer {
         let pausedRooms = this.pausedRooms;
         let pauseTime = 5000;
         let gameStateCount = 0;
+        let stateSaveFrequency = 60;
+        let stateSaveTime =  new Date().getTime() / 1000 + stateSaveFrequency;
         var loop = function () {
             let roomKeys = Object.keys(rooms);
+            let time = new Date().getTime() / 1000;
             for (let roomID in rooms) {
                 try {
                     let room = rooms[roomID];
-
                     if (roomID != 'lobby' && room) {
                         if (room.game.isPaused()) {
                             let timeLeft = ((server.pausedRooms[room][0] - new Date().getTime()));
@@ -267,7 +312,11 @@ export class GameServer {
                 catch(e) {
                     console.log(e);
                 }
+            }
 
+            if (time > stateSaveTime) {
+                server.saveServerState();
+                stateSaveTime += stateSaveFrequency;
             }
 
             again();
