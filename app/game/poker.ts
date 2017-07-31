@@ -268,7 +268,7 @@ export class Poker extends Game {
         // this.minimumBet = this.defaultMinimumBet;
 
         if (state == null) {
-            console.log('state is null');
+            // console.log('state is null');
             this.updateState('game', 'Poker');
             this.updateState('type', this.config['type']);
             this.updateState('minimum', this.config['minimum']);
@@ -286,22 +286,22 @@ export class Poker extends Game {
         }
 
         else {
-            console.log('state not null');
+            // console.log('state not null');
             this.loadState(state);
         }
    }
 
     loadState(state) {
+        // console.log('load state');
         this.state = state;
-        console.log(state);
+        // console.log('state[players]');
+        // console.log(state['player']);
         let playerKeys = Object.keys(state['player']);
         for (let key in playerKeys) {
-            let playerData = state['player'];
-            console.log(state['player'][key]);
-            // console.log(playerData);
-            console.log('key: ' + key);
-            if (playerData)
-                this.addPlayer(key, playerData)
+            let playerData = state['player'][key];
+            if (playerData) {
+                this.addPlayer(key, playerData);
+            }
         }
     }
 

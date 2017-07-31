@@ -770,7 +770,6 @@ function Room () {
                     }
                 });
              }
-
         },
         tick: function() {
             for (let i = this.messages.length - 1; i >= 0 ; i--) {

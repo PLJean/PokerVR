@@ -13,7 +13,7 @@ export class GameServer {
     rooms = {};
 
     idMap = {};
-    createNewRooms = true;
+    createNewRooms = false;
 
     constructor(server) {
         this.server = server;
@@ -24,11 +24,9 @@ export class GameServer {
         let states = this.loadServerState();
         if (!this.createNewRooms && states && Object.keys(states).length > 0 ) {
             for (let roomID in states) {
-                console.log('loading ' + roomID);
+                // console.log('loading ' + roomID);
                 let state = states[roomID];
-                this.createRoom(roomID,
-                    new Poker({type: state['type']}, state)
-                );
+                this.createRoom(roomID, new Poker({type: state['type']}, state));
             }
         }
 
@@ -97,7 +95,9 @@ export class GameServer {
             let states;
             if (data) {
                 states = JSON.parse(data);
+                // console.log('loading:')
             }
+            // console.log(states);
             return states;
         } catch(e) {
             console.log(e);
@@ -120,7 +120,8 @@ export class GameServer {
                 return console.log(err);
             }
         });
-        console.log("saving state");
+        // console.log("saving state");
+        // console.log(states);
     }
 
     initIO () {
@@ -149,8 +150,8 @@ export class GameServer {
                 let room = server.getRoom(socketRoom(socket));
                 if (!room) return;
 
-                // if (room && room.hasOwnProperty('game'))
-                //     room.game.removePlayer(room.game.getPlayerByData('socketid', socket.id));
+                if (room && room.hasOwnProperty('game'))
+                    room.game.removePlayer(room.game.getPlayerByData('socketid', socket.id));
             });
 
             socket.on('join', function(data) {
@@ -189,11 +190,10 @@ export class GameServer {
                 }
             });
 
-            // socket.on('rejoin', function() {
-            //     let room = server.getRoom(socket.rooms[1]);
-            //     if (!room || !room.game) return;
-            //
-            // });
+            socket.on('rejoin', function() {
+                let room = server.getRoom(socket.rooms[1]);
+                if (!room || !room.game) return;
+            });
 
             socket.on('leave', function () {
                 let room = server.getRoom(socket.rooms[1]);
@@ -266,7 +266,7 @@ export class GameServer {
         let pausedRooms = this.pausedRooms;
         let pauseTime = 5000;
         let gameStateCount = 0;
-        let stateSaveFrequency = 60;
+        let stateSaveFrequency = 15;
         let stateSaveTime =  new Date().getTime() / 1000 + stateSaveFrequency;
         var loop = function () {
             let roomKeys = Object.keys(rooms);
